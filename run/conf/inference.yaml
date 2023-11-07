@@ -54,3 +54,4 @@ features:
   - "enmo"
   - "hour_sin"
   - "hour_cos"
+  - "sun_event"
