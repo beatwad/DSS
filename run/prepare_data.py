@@ -4,6 +4,9 @@ from pathlib import Path
 import hydra
 import numpy as np
 import polars as pl
+from astral.geocoder import database, lookup
+from astral.location import Location
+from astral.sun import sun
 from omegaconf import DictConfig
 from tqdm import tqdm
 
@@ -26,6 +29,7 @@ FEATURE_NAMES = [
     "month_cos",
     "minute_sin",
     "minute_cos",
+    "sun_event",
 ]
 
 ANGLEZ_MEAN = -8.810476
@@ -33,6 +37,38 @@ ANGLEZ_STD = 35.521877
 ENMO_MEAN = 0.041315
 ENMO_STD = 0.101829
 
+city_name = 'New York'
+city = lookup(city_name, database())
+city = Location(city)
+
+def get_sun_events(series_df: pl.DataFrame):
+    """
+    For each data add times of dawn, sunrise, noon, sunset and dusk
+    """
+    dates = series_df.with_columns(
+        pl.col('timestamp').dt.date()
+        ).select('timestamp').unique().to_series().to_list()
+    
+    sun_df = pl.DataFrame() 
+    
+    for date in dates:
+        s = sun(city.observer, date=date, tzinfo=city.timezone)
+        tmp = pl.from_dict(s).transpose(include_header=True, column_names=['timestamp'])
+        tmp = tmp.with_columns(
+            ((pl.col('column').cast(pl.Categorical).cast(pl.Int8)+1)/5).cast(pl.Float32),
+            pl.col('timestamp').dt.round('5s')
+            ).select(['column', 'timestamp'])
+        tmp = tmp.rename({'column': 'sun_event'})
+        sun_df = pl.concat([sun_df, tmp])
+
+    series_df = series_df.join(sun_df, on='timestamp', how='left')
+    series_df = series_df.with_columns(pl.col('sun_event').forward_fill())
+    series_df = series_df.with_columns(pl.col('sun_event').backward_fill().alias('event_back'))
+    series_df = series_df.with_columns(pl.when(pl.col('sun_event').is_null()).then(pl.col('event_back')-0.2).otherwise(pl.col('sun_event')).alias('sun_event'))
+    series_df = series_df.drop('event_back')
+    series_df = series_df.fill_null(0)
+    return series_df
+ 
 
 def to_coord(x: pl.Expr, max_: int, name: str) -> list[pl.Expr]:
     rad = 2 * np.pi * (x % max_) / max_
@@ -63,7 +99,7 @@ def save_each_series(this_series_df: pl.DataFrame, columns: list[str], output_di
 def main(cfg: DictConfig):
     processed_dir: Path = Path(cfg.dir.processed_dir) / cfg.phase
 
-    # ディレクトリが存在する場合は削除
+    # delete the directory if it exists
     if processed_dir.exists():
         shutil.rmtree(processed_dir)
         print(f"Removed {cfg.phase} dir: {processed_dir}")
@@ -97,10 +133,11 @@ def main(cfg: DictConfig):
         n_unique = series_df.get_column("series_id").n_unique()
     with trace("Save features"):
         for series_id, this_series_df in tqdm(series_df.group_by("series_id"), total=n_unique):
-            # 特徴量を追加
+            # add features
+            this_series_df = get_sun_events(this_series_df)
             this_series_df = add_feature(this_series_df)
 
-            # 特徴量をそれぞれnpyで保存
+            # save each feature in .npy
             series_dir = processed_dir / series_id  # type: ignore
             save_each_series(this_series_df, FEATURE_NAMES, series_dir)
 

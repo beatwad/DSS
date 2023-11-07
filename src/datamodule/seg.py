@@ -83,17 +83,19 @@ def random_crop(pos: int, duration: int, max_end) -> tuple[int, int]:
 def get_label(
     this_event_df: pd.DataFrame, num_frames: int, duration: int, start: int, end: int
 ) -> np.ndarray:
-    # # (start, end)の範囲と(onset, wakeup)の範囲が重なるものを取得
+    """ 
+    create labels for onset, wakeup, sleep 
+    """
+    # get the ranges that overlap (start, end) and the range of (onset, wakeup) 
     this_event_df = this_event_df.query("@start <= wakeup & onset <= @end")
 
     label = np.zeros((num_frames, 3))
-    # onset, wakeup, sleepのラベルを作成
     for onset, wakeup in this_event_df[["onset", "wakeup"]].to_numpy():
         onset = int((onset - start) / duration * num_frames)
         wakeup = int((wakeup - start) / duration * num_frames)
         if onset >= 0 and onset < num_frames:
             label[onset, 1] = 1
-        if wakeup < num_frames and wakeup >= 0:
+        if wakeup >= 0 and wakeup < num_frames:
             label[wakeup, 2] = 1
 
         onset = max(0, onset)
@@ -105,17 +107,25 @@ def get_label(
 
 # ref: https://www.kaggle.com/competitions/dfl-bundesliga-data-shootout/discussion/360236#2004730
 def gaussian_kernel(length: int, sigma: int = 3) -> np.ndarray:
+    """
+    apply gaussian
+    """
+    # an instance which returns an open multi-dimensional “meshgrid”
     x = np.ogrid[-length : length + 1]
     h = np.exp(-(x**2) / (2 * sigma * sigma))  # type: ignore
+    # round values to smalles possible value of type
     h[h < np.finfo(h.dtype).eps * h.max()] = 0
     return h
 
 
 def gaussian_label(label: np.ndarray, offset: int, sigma: int) -> np.ndarray:
-    num_events = label.shape[1]
-    for i in range(num_events):
+    """
+    add labels using gaussian
+    """
+    num_classes = label.shape[1]
+    for i in range(num_classes):
+        # create convolution of labels and gaussian
         label[:, i] = np.convolve(label[:, i], gaussian_kernel(offset, sigma), mode="same")
-
     return label
 
 
@@ -141,7 +151,7 @@ def negative_sampling(this_event_df: pd.DataFrame, num_steps: int) -> int:
 def nearest_valid_size(input_size: int, downsample_rate: int) -> int:
     """
     (x // hop_length) % 32 == 0
-    を満たすinput_sizeに最も近いxを返す
+    makes input size even to 32
     """
 
     while (input_size // downsample_rate) % 32 != 0:

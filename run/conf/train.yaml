@@ -19,14 +19,14 @@ defaults:
 
 seed: 42
 exp_name: dummy
-duration: 5760 # duration * 5 = 秒数
+duration: 5760 # duration * 5 = number of seconds
 downsample_rate: 2
 upsample_rate: 1
 
 # training
 epoch: 50
-batch_size: 64
-num_workers: 24
+batch_size: 32
+num_workers: 12
 accelerator: auto
 use_amp: true
 debug: false
@@ -38,8 +38,8 @@ check_val_every_n_epoch: 1
 
 # Dataset
 offset: 10
-sigma: 10
-bg_sampling_rate: 0.5
+sigma: 6
+bg_sampling_rate: 0.5 # probability of negative samples
 
 # augmentation
 augmentation:
@@ -50,7 +50,7 @@ augmentation:
   
 # post_process
 post_process:
-  score_th: 0.02
+  score_th: 0.05
   distance: 10
 
 # label
@@ -69,6 +69,7 @@ features:
   - "hour_cos"
   # - "minute_sin"
   # - "minute_cos"
+  - "sun_event"
 
 # optimizer
 optimizer:

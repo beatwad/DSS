@@ -176,19 +176,43 @@ def event_detection_ap(
     return mean_ap
 
 
-def find_nearest_time_idx(times, target_time, excluded_indices, tolerance):
-    """Find the index of the nearest time to the target_time
-    that is not in excluded_indices."""
-    idx = bisect_left(times, target_time)
+# def find_nearest_time_idx(times, target_time, excluded_indices, tolerance):
+#     """Find the index of the nearest time to the target_time
+#     that is not in excluded_indices."""
+#     idx = bisect_left(times, target_time)
+
+#     best_idx = None
+#     best_error = float("inf")
+
+#     offset_range = min(len(times), tolerance)
+#     for offset in range(-offset_range, offset_range):  # Check the exact, one before, and one after
+#         check_idx = idx + offset
+#         if 0 <= check_idx < len(times) and check_idx not in excluded_indices:
+#             error = abs(times[check_idx] - target_time)
+#             if error < best_error:
+#                 best_error = error
+#                 best_idx = check_idx
+
+#     return best_idx, best_error
+
+
+def find_nearest_time_idx(gt_times, det_time, excluded_indices: set, *args):
+    """
+    search index of gt_times closest to det_time.
+
+    assumes gt_times is sorted in ascending order.
+    """
+    # e.g. if gt_times = [0, 1, 2, 3, 4, 5] and det_time = 2.5, then idx = 3
+    idx = bisect_left(gt_times, det_time)
 
     best_idx = None
     best_error = float("inf")
 
-    offset_range = min(len(times), tolerance)
-    for offset in range(-offset_range, offset_range):  # Check the exact, one before, and one after
-        check_idx = idx + offset
-        if 0 <= check_idx < len(times) and check_idx not in excluded_indices:
-            error = abs(times[check_idx] - target_time)
+    range_min = max(0, idx - 1)
+    range_max = min(len(gt_times), idx + 2)
+    for check_idx in range(range_min, range_max):  # Check the exact, one before, and one after
+        if check_idx not in excluded_indices:
+            error = abs(gt_times[check_idx] - det_time)
             if error < best_error:
                 best_error = error
                 best_idx = check_idx
