@@ -39,7 +39,7 @@ def post_process_for_seg(
                     }
                 )
 
-    if len(records) == 0:  # 一つも予測がない場合はdummyを入れる
+    if len(records) == 0:  # If there is no prediction, insert dummy
         records.append(
             {
                 "series_id": series_id,
