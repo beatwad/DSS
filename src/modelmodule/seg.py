@@ -136,8 +136,8 @@ class SegModel(LightningModule):
             val_pred_df.write_csv("val_pred_loss_df.csv")
             torch.save(self.model.state_dict(), f"best_model_loss.pth")
             print(f"Saved best loss model {self.__best_loss} -> {loss}")
-            self.__best_loss = loss
-
+        
+        self.__best_loss = min(self.__best_loss, loss)
         self.validation_step_outputs.clear()
 
     def configure_optimizers(self):

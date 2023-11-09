@@ -90,6 +90,7 @@ def get_label(
     this_event_df = this_event_df.query("@start <= wakeup & onset <= @end")
 
     label = np.zeros((num_frames, 3))
+    # find position of onset and wakeup and put them into the corresponding frame
     for onset, wakeup in this_event_df[["onset", "wakeup"]].to_numpy():
         onset = int((onset - start) / duration * num_frames)
         wakeup = int((wakeup - start) / duration * num_frames)
@@ -97,10 +98,10 @@ def get_label(
             label[onset, 1] = 1
         if wakeup >= 0 and wakeup < num_frames:
             label[wakeup, 2] = 1
-
         onset = max(0, onset)
         wakeup = min(num_frames, wakeup)
         label[onset:wakeup, 0] = 1  # sleep
+        break
 
     return label
 
@@ -125,7 +126,8 @@ def gaussian_label(label: np.ndarray, offset: int, sigma: int) -> np.ndarray:
     num_classes = label.shape[1]
     for i in range(num_classes):
         # create convolution of labels and gaussian
-        label[:, i] = np.convolve(label[:, i], gaussian_kernel(offset, sigma), mode="same")
+        label[:, i] = np.convolve(label[:, i], gaussian_kernel(length=offset, sigma=sigma), 
+                                  mode="same")
     return label
 
 
@@ -139,7 +141,7 @@ def negative_sampling(this_event_df: pd.DataFrame, num_steps: int) -> int:
     Returns:
         int: negative sample position
     """
-    # onsetとwakupを除いた範囲からランダムにサンプリング
+    # randomly sample from the range excluding onset and wakeup 
     positive_positions = set(this_event_df[["onset", "wakeup"]].to_numpy().flatten().tolist())
     negative_positions = list(set(range(num_steps)) - positive_positions)
     return random.sample(negative_positions, 1)[0]

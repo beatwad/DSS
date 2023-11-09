@@ -25,8 +25,8 @@ upsample_rate: 1
 
 # training
 epoch: 50
-batch_size: 64
-num_workers: 12
+batch_size: 32
+num_workers: 11
 accelerator: auto
 use_amp: true
 debug: false
@@ -73,7 +73,7 @@ features:
 
 # optimizer
 optimizer:
-  lr: 0.001
+  lr: 0.0005
 
 # scheduler
 scheduler:

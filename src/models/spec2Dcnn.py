@@ -3,10 +3,25 @@ from typing import Optional
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from src.augmentation.cutmix import Cutmix
 from src.augmentation.mixup import Mixup
 
+
+class FocalLoss(nn.Module):
+    def __init__(self, weight=None, size_average=True, alpha=1., gamma=2.):
+        super(FocalLoss, self).__init__()
+        self.criterion = nn.BCEWithLogitsLoss(reduction='none')
+        self.alpha = alpha
+        self.gamma = gamma
+
+    def forward(self, inputs, targets):
+        BCE = self.criterion(inputs, targets)
+        BCE_EXP = torch.exp(-BCE)
+        focal_loss = self.alpha * (1-BCE_EXP)**self.gamma * BCE
+                    
+        return torch.mean(focal_loss)
 
 class Spec2DCNN(nn.Module):
     def __init__(
@@ -30,7 +45,9 @@ class Spec2DCNN(nn.Module):
         self.decoder = decoder
         self.mixup = Mixup(mixup_alpha)
         self.cutmix = Cutmix(cutmix_alpha)
-        self.loss_fn = nn.BCEWithLogitsLoss()
+        # self.loss_fn = nn.BCEWithLogitsLoss()
+        # self.loss_fn = nn.KLDivLoss(reduction='sum')
+        self.loss_fn = FocalLoss(alpha=1., gamma=2.)
 
     def forward(
         self,
@@ -63,3 +80,4 @@ class Spec2DCNN(nn.Module):
             output["loss"] = loss
 
         return output
+
