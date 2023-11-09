@@ -5,12 +5,9 @@ import hydra
 import torch
 from omegaconf import DictConfig
 from pytorch_lightning import Trainer, seed_everything
-from pytorch_lightning.callbacks import (
-    LearningRateMonitor,
-    ModelCheckpoint,
-    RichModelSummary,
-    RichProgressBar,
-)
+from pytorch_lightning.callbacks import (LearningRateMonitor, ModelCheckpoint,
+                                         RichModelSummary, RichProgressBar,
+                                         StochasticWeightAveraging)
 from pytorch_lightning.loggers import WandbLogger
 
 from src.datamodule.seg import SegDataModule
@@ -44,6 +41,8 @@ def main(cfg: DictConfig):  # type: ignore
     lr_monitor = LearningRateMonitor("epoch")
     progress_bar = RichProgressBar()
     model_summary = RichModelSummary(max_depth=2)
+    swa = StochasticWeightAveraging(swa_lrs=cfg.optimizer.lr/10, swa_epoch_start=0.5, 
+                                    annealing_strategy='cos', annealing_epochs=1)
 
     # init experiment logger
     pl_logger = WandbLogger(
@@ -60,10 +59,10 @@ def main(cfg: DictConfig):  # type: ignore
         # training
         fast_dev_run=cfg.debug,  # run only 1 train batch and 1 val batch
         max_epochs=cfg.epoch,
-        max_steps=cfg.epoch * len(datamodule.train_dataloader()),
+        max_steps=cfg.epoch * len(datamodule.train_dataloader()),  # 50 * 119
         gradient_clip_val=cfg.gradient_clip_val,
         accumulate_grad_batches=cfg.accumulate_grad_batches,
-        callbacks=[checkpoint_cb, lr_monitor, progress_bar, model_summary],
+        callbacks=[lr_monitor, progress_bar, model_summary], # checkpoint_cb, swa],
         logger=pl_logger,
         # resume_from_checkpoint=resume_from,
         num_sanity_val_steps=0,

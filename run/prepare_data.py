@@ -74,7 +74,6 @@ def to_coord(x: pl.Expr, max_: int, name: str) -> list[pl.Expr]:
     rad = 2 * np.pi * (x % max_) / max_
     x_sin = rad.sin()
     x_cos = rad.cos()
-
     return [x_sin.alias(f"{name}_sin"), x_cos.alias(f"{name}_cos")]
 
 

@@ -6,6 +6,8 @@ import torch
 import torch.optim as optim
 from omegaconf import DictConfig
 from pytorch_lightning import LightningModule
+from pytorch_lightning.callbacks import Callback
+from torch.optim.swa_utils import SWALR, AveragedModel
 from torchvision.transforms.functional import resize
 from transformers import get_cosine_schedule_with_warmup
 
@@ -37,6 +39,7 @@ class SegModel(LightningModule):
         self.duration = duration
         self.validation_step_outputs: list = []
         self.__best_loss = np.inf
+        self.__best_score = 0
 
     def forward(
         self, x: torch.Tensor, labels: Optional[torch.Tensor] = None
@@ -118,20 +121,48 @@ class SegModel(LightningModule):
         score = event_detection_ap(self.val_event_df.to_pandas(), val_pred_df.to_pandas())
         self.log("val_score", score, on_step=False, on_epoch=True, logger=True, prog_bar=True)
 
-        if loss < self.__best_loss:
+        if score > self.__best_score:
             np.save("keys.npy", np.array(keys))
             np.save("labels.npy", labels)
             np.save("preds.npy", preds)
-            val_pred_df.write_csv("val_pred_df.csv")
-            torch.save(self.model.state_dict(), "best_model.pth")
-            print(f"Saved best model {self.__best_loss} -> {loss}")
+            val_pred_df.write_csv("val_pred_score_df.csv")
+            torch.save(self.model.state_dict(), f"best_model_score.pth")
+            print(f"Saved best score model {self.__best_score} -> {score}")
+            self.__best_score = score
+        elif loss < self.__best_loss:
+            np.save("keys.npy", np.array(keys))
+            np.save("labels.npy", labels)
+            np.save("preds.npy", preds)
+            val_pred_df.write_csv("val_pred_loss_df.csv")
+            torch.save(self.model.state_dict(), f"best_model_loss.pth")
+            print(f"Saved best loss model {self.__best_loss} -> {loss}")
             self.__best_loss = loss
 
         self.validation_step_outputs.clear()
 
     def configure_optimizers(self):
         optimizer = optim.AdamW(self.parameters(), lr=self.cfg.optimizer.lr)
+        # first 75% epoch train with cosine annealing, than train with SWA and high constant LR
+        # if self.trainer.current_epoch >= 3 * self.cfg.epoch // 4:
+        #     scheduler = SWALR(optimizer, swa_lr=self.cfg.optimizer.lr, anneal_strategy='cos')
+        # else:
         scheduler = get_cosine_schedule_with_warmup(
             optimizer, num_training_steps=self.trainer.max_steps, **self.cfg.scheduler
         )
+        # scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, 
+        #                                                            T_0=self.trainer.max_steps//2 + 1, 
+        #                                                            T_mult=1, eta_min=0, 
+        #                                                            last_epoch=-1)
         return [optimizer], [{"scheduler": scheduler, "interval": "step"}]
+
+    
+    # def on_train_epoch_start(self):
+    #     scheduler = SWALR(self.trainer.optimizers, swa_lr=0.005, anneal_strategy='cos')
+    #     if self.trainer.current_epoch >= 2:
+    #         self.trainer.lr_schedulers = self.trainer.configure_schedulers([scheduler])
+    
+# class SWA_callback(Callback):
+#     def on_train_epoch_start(self, trainer, pl_module):
+#         scheduler = SWALR(trainer.optimizers, swa_lr=0.005, anneal_strategy='cos')
+#         if trainer.current_epoch >= 2:
+#             trainer.lr_schedulers = trainer.configure_schedulers([scheduler])
