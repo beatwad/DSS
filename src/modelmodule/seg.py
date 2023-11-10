@@ -7,6 +7,7 @@ import torch.optim as optim
 from omegaconf import DictConfig
 from pytorch_lightning import LightningModule
 from pytorch_lightning.callbacks import Callback
+from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
 from torch.optim.swa_utils import SWALR, AveragedModel
 from torchvision.transforms.functional import resize
 from transformers import get_cosine_schedule_with_warmup
@@ -15,6 +16,24 @@ from src.datamodule.seg import nearest_valid_size
 from src.models.common import get_model
 from src.utils.metrics import event_detection_ap
 from src.utils.post_process import post_process_for_seg
+
+
+class CosineAnnealingWarmRestartsDecay(CosineAnnealingWarmRestarts):
+    """
+    Cosine anneal scheduler that decays after every cycle
+    """
+    def __init__(self, optimizer, T_0, T_mult=1, eta_min=0, last_epoch=-1, decay=0.1):
+        super(CosineAnnealingWarmRestartsDecay, self).__init__(optimizer, T_0, T_mult, eta_min, 
+                                                               last_epoch)
+        self.T_0 = T_0
+        self.decay = decay
+        self.optimizer = optimizer
+
+    def step(self, step=None):
+        if step is not None and step > 0 and step % self.T_0 == 0:
+            self.base_lrs = [lrs * self.decay for lrs in self.base_lrs]  
+        super().step(step)          
+
 
 
 class SegModel(LightningModule):
@@ -28,6 +47,7 @@ class SegModel(LightningModule):
     ):
         super().__init__()
         self.cfg = cfg
+        self.lr = self.cfg.optimizer.lr
         self.val_event_df = val_event_df
         num_timesteps = nearest_valid_size(int(duration * cfg.upsample_rate), cfg.downsample_rate)
         self.model = get_model(
@@ -141,25 +161,31 @@ class SegModel(LightningModule):
         self.validation_step_outputs.clear()
 
     def configure_optimizers(self):
-        optimizer = optim.AdamW(self.parameters(), lr=self.cfg.optimizer.lr)
-        # first 75% epoch train with cosine annealing, than train with SWA and high constant LR
-        # if self.trainer.current_epoch >= 3 * self.cfg.epoch // 4:
-        #     scheduler = SWALR(optimizer, swa_lr=self.cfg.optimizer.lr, anneal_strategy='cos')
-        # else:
-        scheduler = get_cosine_schedule_with_warmup(
-            optimizer, num_training_steps=self.trainer.max_steps, **self.cfg.scheduler
-        )
-        # scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, 
-        #                                                            T_0=self.trainer.max_steps//2 + 1, 
-        #                                                            T_mult=1, eta_min=0, 
-        #                                                            last_epoch=-1)
+        optimizer = optim.AdamW(self.parameters(), lr=self.lr)
+        if self.cfg.scheduler.type == 'decay':
+            scheduler = CosineAnnealingWarmRestartsDecay(optimizer, 
+                                                         T_0=self.trainer.max_steps//2, 
+                                                         T_mult=1, 
+                                                         eta_min=0, 
+                                                         last_epoch=-1,
+                                                         decay=self.cfg.scheduler.decay)
+        else:
+            scheduler = get_cosine_schedule_with_warmup(
+                optimizer, num_training_steps=self.trainer.max_steps, 
+                num_warmup_steps=self.cfg.scheduler.num_warmup_steps
+            )
         return [optimizer], [{"scheduler": scheduler, "interval": "step"}]
 
+    def lr_scheduler_step(self, scheduler, metric):
+        if self.cfg.scheduler.type == 'decay':
+            scheduler.step(step=self.global_step)
+        else:
+            scheduler.step()
     
     # def on_train_epoch_start(self):
-    #     scheduler = SWALR(self.trainer.optimizers, swa_lr=0.005, anneal_strategy='cos')
-    #     if self.trainer.current_epoch >= 2:
-    #         self.trainer.lr_schedulers = self.trainer.configure_schedulers([scheduler])
+    #     if self.cfg.scheduler.type == 'decay' and self.trainer.current_epoch >= self.cfg.epoch//2:
+    #         self.lr_schedulers[0].base_lrs = [lrs * 0.1 for lrs in self.lr_schedulers[0].base_lrs]
+    #         # self.trainer.optimizers, self.trainer.lr_schedulers = self.configure_optimizers()
     
 # class SWA_callback(Callback):
 #     def on_train_epoch_start(self, trainer, pl_module):

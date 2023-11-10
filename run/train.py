@@ -73,18 +73,18 @@ def main(cfg: DictConfig):  # type: ignore
 
     trainer.fit(model, datamodule=datamodule)
 
-    # load best weights
-    model = model.load_from_checkpoint(
-        checkpoint_cb.best_model_path,
-        cfg=cfg,
-        val_event_df=datamodule.valid_event_df,
-        feature_dim=len(cfg.features),
-        num_classes=len(cfg.labels),
-        duration=cfg.duration,
-    )
-    weights_path = str("model_weights.pth")  # type: ignore
-    LOGGER.info(f"Extracting and saving best weights: {weights_path}")
-    torch.save(model.model.state_dict(), weights_path)
+    # # load best weights
+    # model = model.load_from_checkpoint(
+    #     checkpoint_cb.best_model_path,
+    #     cfg=cfg,
+    #     val_event_df=datamodule.valid_event_df,
+    #     feature_dim=len(cfg.features),
+    #     num_classes=len(cfg.labels),
+    #     duration=cfg.duration,
+    # )
+    # weights_path = str("model_weights.pth")  # type: ignore
+    # LOGGER.info(f"Extracting and saving best weights: {weights_path}")
+    # torch.save(model.model.state_dict(), weights_path)
 
     return
 

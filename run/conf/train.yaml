@@ -50,8 +50,8 @@ augmentation:
   
 # post_process
 post_process:
-  score_th: 0.05
-  distance: 10
+  score_th: 0.1
+  distance: 95
 
 # label
 labels:
@@ -77,4 +77,6 @@ optimizer:
 
 # scheduler
 scheduler:
+  type: decay
+  decay: 0.1
   num_warmup_steps: 0
