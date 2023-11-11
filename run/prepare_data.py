@@ -25,11 +25,15 @@ FEATURE_NAMES = [
     "enmo",
     "hour_sin",
     "hour_cos",
-    "month_sin",
-    "month_cos",
-    "minute_sin",
-    "minute_cos",
-    "sun_event",
+    # "day_sin",
+    # "day_cos",
+    # "month_sin",
+    # "month_cos",
+    # "minute_sin",
+    # "minute_cos",
+    # "week_sin",
+    # "week_cos",
+    # "sun_event",
 ]
 
 ANGLEZ_MEAN = -8.810476
@@ -79,6 +83,8 @@ def to_coord(x: pl.Expr, max_: int, name: str) -> list[pl.Expr]:
 
 def add_feature(series_df: pl.DataFrame) -> pl.DataFrame:
     series_df = series_df.with_columns(
+        *to_coord(pl.col("timestamp").dt.day(), 366, "day"),
+        *to_coord(pl.col("timestamp").dt.week(), 53, "week"),
         *to_coord(pl.col("timestamp").dt.hour(), 24, "hour"),
         *to_coord(pl.col("timestamp").dt.month(), 12, "month"),
         *to_coord(pl.col("timestamp").dt.minute(), 60, "minute"),
@@ -133,7 +139,7 @@ def main(cfg: DictConfig):
     with trace("Save features"):
         for series_id, this_series_df in tqdm(series_df.group_by("series_id"), total=n_unique):
             # add features
-            this_series_df = get_sun_events(this_series_df)
+            # this_series_df = get_sun_events(this_series_df)
             this_series_df = add_feature(this_series_df)
 
             # save each feature in .npy

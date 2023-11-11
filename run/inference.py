@@ -1,3 +1,4 @@
+import glob
 from pathlib import Path
 
 import hydra
@@ -11,7 +12,8 @@ from torch.utils.data import DataLoader
 from torchvision.transforms.functional import resize
 from tqdm import tqdm
 
-from src.datamodule.seg import TestDataset, load_chunk_features, nearest_valid_size
+from src.datamodule.seg import (TestDataset, load_chunk_features,
+                                nearest_valid_size)
 from src.models.common import get_model
 from src.utils.common import trace
 from src.utils.post_process import post_process_for_seg
@@ -28,14 +30,16 @@ def load_model(cfg: DictConfig) -> nn.Module:
 
     # load weights
     if cfg.weight is not None:
-        weight_path = (
-            Path(cfg.dir.model_dir)
-            / cfg.weight["exp_name"]
-            / cfg.weight["run_name"]
-            / "best_model.pth"
-        )
+        # weight_path = (
+        #     Path(cfg.dir.model_dir)
+        #     / cfg.weight["exp_name"]
+        #     / cfg.weight["run_name"]
+        #     / "best_model.pth"
+        # )
+        weight_path = f'{cfg.dir.model_dir}/{cfg.weight["exp_name"]}/{cfg.weight["run_name"]}/*.pth'
+        weight_path = glob.glob(weight_path)[0]
         model.load_state_dict(torch.load(weight_path))
-        print('load weight from "{}"'.format(weight_path))
+        print(f'load weight from {weight_path}')
     return model
 
 

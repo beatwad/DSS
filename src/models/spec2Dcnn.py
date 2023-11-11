@@ -36,7 +36,7 @@ class Spec2DCNN(nn.Module):
     ):
         super().__init__()
         self.feature_extractor = feature_extractor
-        self.encoder = smp.Unet(
+        self.encoder = smp.UnetPlusPlus(
             encoder_name=encoder_name,
             encoder_weights=encoder_weights,
             in_channels=in_channels,
@@ -45,9 +45,8 @@ class Spec2DCNN(nn.Module):
         self.decoder = decoder
         self.mixup = Mixup(mixup_alpha)
         self.cutmix = Cutmix(cutmix_alpha)
-        # self.loss_fn = nn.BCEWithLogitsLoss()
-        # self.loss_fn = nn.KLDivLoss(reduction='sum')
-        self.loss_fn = FocalLoss(alpha=1., gamma=2.)
+        self.loss_fn = nn.BCEWithLogitsLoss()
+        # self.loss_fn = FocalLoss(alpha=1., gamma=2.)
 
     def forward(
         self,

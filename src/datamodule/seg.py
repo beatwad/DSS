@@ -212,12 +212,11 @@ class TrainDataset(Dataset):
         ).squeeze(0)
 
         # from hard label to gaussian label
-        num_frames = self.upsampled_num_frames // self.cfg.downsample_rate
+        num_frames = self.upsampled_num_frames // self.cfg.downsample_rate # 2880
         label = get_label(this_event_df, num_frames, self.cfg.duration, start, end)
         label[:, [1, 2]] = gaussian_label(
             label[:, [1, 2]], offset=self.cfg.offset, sigma=self.cfg.sigma
         )
-
         return {
             "series_id": series_id,
             "feature": feature,  # (num_features, upsampled_num_frames)
@@ -270,6 +269,9 @@ class ValidDataset(Dataset):
             start,
             end,
         )
+        # label[:, [1, 2]] = gaussian_label(
+        #     label[:, [1, 2]], offset=self.cfg.offset, sigma=self.cfg.sigma !!!
+        # )
         return {
             "key": key,
             "feature": feature,  # (num_features, duration)

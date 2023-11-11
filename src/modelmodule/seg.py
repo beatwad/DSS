@@ -94,16 +94,19 @@ class SegModel(LightningModule):
                 prog_bar=True,
             )
         elif mode == "val":
+            # stretch array to required size using bilinear interpolation
             resized_logits = resize(
                 logits.sigmoid().detach().cpu(),
                 size=[self.duration, logits.shape[2]],
                 antialias=False,
             )
+            
             resized_labels = resize(
                 batch["label"].detach().cpu(),
                 size=[self.duration, logits.shape[2]],
                 antialias=False,
             )
+            
             self.validation_step_outputs.append(
                 (
                     batch["key"],
@@ -181,14 +184,3 @@ class SegModel(LightningModule):
             scheduler.step(step=self.global_step)
         else:
             scheduler.step()
-    
-    # def on_train_epoch_start(self):
-    #     if self.cfg.scheduler.type == 'decay' and self.trainer.current_epoch >= self.cfg.epoch//2:
-    #         self.lr_schedulers[0].base_lrs = [lrs * 0.1 for lrs in self.lr_schedulers[0].base_lrs]
-    #         # self.trainer.optimizers, self.trainer.lr_schedulers = self.configure_optimizers()
-    
-# class SWA_callback(Callback):
-#     def on_train_epoch_start(self, trainer, pl_module):
-#         scheduler = SWALR(trainer.optimizers, swa_lr=0.005, anneal_strategy='cos')
-#         if trainer.current_epoch >= 2:
-#             trainer.lr_schedulers = trainer.configure_schedulers([scheduler])

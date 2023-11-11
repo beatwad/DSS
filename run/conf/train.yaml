@@ -14,7 +14,7 @@ defaults:
   - dir: local
   - model: Spec2DCNN
   - feature_extractor: CNNSpectrogram
-  - decoder: UNet1DDecoder
+  - decoder: TransformerDecoder
   - split: fold_0
 
 seed: 42
@@ -26,7 +26,7 @@ upsample_rate: 1
 # training
 epoch: 50
 batch_size: 32
-num_workers: 11
+num_workers: 12
 accelerator: auto
 use_amp: true
 debug: false
@@ -37,7 +37,7 @@ monitor_mode: min
 check_val_every_n_epoch: 1
 
 # Dataset
-offset: 10 # length of gaussian kernel
+offset: 30 # length of gaussian kernel
 sigma: 6
 bg_sampling_rate: 0.5 # probability of negative samples
 
@@ -50,8 +50,8 @@ augmentation:
   
 # post_process
 post_process:
-  score_th: 0.1
-  distance: 95
+  score_th: 0.0001
+  distance: 80
 
 # label
 labels:
@@ -70,6 +70,8 @@ features:
   # - "minute_sin"
   # - "minute_cos"
   # - "sun_event"
+  # - "week_sin"
+  # - "week_cos"
 
 # optimizer
 optimizer:
@@ -77,6 +79,6 @@ optimizer:
 
 # scheduler
 scheduler:
-  type: decay
+  type: base # decay
   decay: 0.1
   num_warmup_steps: 0
