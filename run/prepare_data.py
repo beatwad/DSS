@@ -31,9 +31,9 @@ FEATURE_NAMES = [
     # "month_cos",
     # "minute_sin",
     # "minute_cos",
-    # "week_sin",
-    # "week_cos",
-    # "sun_event",
+    "week_sin",
+    "week_cos",
+    "sun_event",
 ]
 
 ANGLEZ_MEAN = -8.810476
@@ -139,7 +139,7 @@ def main(cfg: DictConfig):
     with trace("Save features"):
         for series_id, this_series_df in tqdm(series_df.group_by("series_id"), total=n_unique):
             # add features
-            # this_series_df = get_sun_events(this_series_df)
+            this_series_df = get_sun_events(this_series_df)
             this_series_df = add_feature(this_series_df)
 
             # save each feature in .npy

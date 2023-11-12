@@ -37,7 +37,7 @@ monitor_mode: min
 check_val_every_n_epoch: 1
 
 # Dataset
-offset: 30 # length of gaussian kernel
+offset: 20 # length of gaussian kernel
 sigma: 6
 bg_sampling_rate: 0.5 # probability of negative samples
 
@@ -70,12 +70,12 @@ features:
   # - "minute_sin"
   # - "minute_cos"
   # - "sun_event"
-  # - "week_sin"
-  # - "week_cos"
+  - "week_sin"
+  - "week_cos"
 
 # optimizer
 optimizer:
-  lr: 0.0005
+  lr: 0.00025
 
 # scheduler
 scheduler:

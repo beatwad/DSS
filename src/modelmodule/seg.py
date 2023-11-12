@@ -146,16 +146,16 @@ class SegModel(LightningModule):
 
         if score > self.__best_score:
             np.save("keys.npy", np.array(keys))
-            np.save("labels.npy", labels)
-            np.save("preds.npy", preds)
+            np.save("labels_score.npy", labels)
+            np.save("preds_score.npy", preds)
             val_pred_df.write_csv("val_pred_score_df.csv")
             torch.save(self.model.state_dict(), f"best_model_score.pth")
             print(f"Saved best score model {self.__best_score} -> {score}")
             self.__best_score = score
-        elif loss < self.__best_loss:
+        if loss < self.__best_loss:
             np.save("keys.npy", np.array(keys))
-            np.save("labels.npy", labels)
-            np.save("preds.npy", preds)
+            np.save("labels_loss.npy", labels)
+            np.save("preds_loss.npy", preds)
             val_pred_df.write_csv("val_pred_loss_df.csv")
             torch.save(self.model.state_dict(), f"best_model_loss.pth")
             print(f"Saved best loss model {self.__best_loss} -> {loss}")
