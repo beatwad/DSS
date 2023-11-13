@@ -31,9 +31,9 @@ def load_model(cfg: DictConfig) -> nn.Module:
     # load weights
     if cfg.weight is not None:
         weight_path = f'{cfg.dir.model_dir}/{cfg.weight["exp_name"]}/*.pth'
-        if cfg.dir.best_model == 'loss':
+        if cfg.best_model == 'loss':
             weight_path = glob.glob(weight_path)[0]
-        elif cfg.dir.best_model == 'score':
+        elif cfg.best_model == 'score':
             weight_path = glob.glob(weight_path)[1]
         else:
             raise('Incorrect best_model type')
