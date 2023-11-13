@@ -30,13 +30,13 @@ def load_model(cfg: DictConfig) -> nn.Module:
 
     # load weights
     if cfg.weight is not None:
-        weight_path = f'{cfg.dir.model_dir}/{cfg.weight["exp_name"]}/*.pth'
         if cfg.best_model == 'loss':
-            weight_path = glob.glob(weight_path)[0]
+            weight_path = f'{cfg.dir.model_dir}/{cfg.weight["exp_name"]}/*_loss.pth'
         elif cfg.best_model == 'score':
-            weight_path = glob.glob(weight_path)[1]
+            weight_path = f'{cfg.dir.model_dir}/{cfg.weight["exp_name"]}/*_score.pth'
         else:
             raise('Incorrect best_model type')
+        weight_path = glob.glob(weight_path)[0]
         model.load_state_dict(torch.load(weight_path))
         print(f'load weight from {weight_path}')
     return model
