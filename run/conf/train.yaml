@@ -15,7 +15,7 @@ defaults:
   - model: Spec2DCNN
   - feature_extractor: CNNSpectrogram
   - decoder: TransformerDecoder
-  - split: fold_0
+  - split: fold_3
 
 seed: 42
 exp_name: dummy

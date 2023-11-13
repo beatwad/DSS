@@ -31,9 +31,9 @@ FEATURE_NAMES = [
     # "month_cos",
     # "minute_sin",
     # "minute_cos",
-    "week_sin",
-    "week_cos",
-    "sun_event",
+    # "week_sin",
+    # "week_cos",
+    # "sun_event",
 ]
 
 ANGLEZ_MEAN = -8.810476
