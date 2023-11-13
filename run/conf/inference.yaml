@@ -4,7 +4,7 @@ hydra:
     name: inference
     chdir: true
   run:
-    dir: ${dir.output_dir}/${hydra.job.name}/${exp_name}/single
+    dir: ${dir.output_dir}/${hydra.job.name}/${exp_name}
   sweep:
     dir: ${dir.output_dir}/${hydra.job.name}/${exp_name}
     subdir: run${hydra.job.num}
@@ -18,6 +18,7 @@ defaults:
 
 exp_name: dummy
 phase: test
+best_model: loss
 weight:
   exp_name: ${exp_name}
   run_name: single
@@ -39,7 +40,7 @@ augmentation:
 
 # post_process
 post_process:
-  score_th: 0.1
+  score_th: 0.0001
   distance: 90
 
 # label

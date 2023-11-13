@@ -51,7 +51,7 @@ augmentation:
 # post_process
 post_process:
   score_th: 0.0001
-  distance: 80
+  distance: 90
 
 # label
 labels:
@@ -70,12 +70,12 @@ features:
   # - "minute_sin"
   # - "minute_cos"
   # - "sun_event"
-  - "week_sin"
-  - "week_cos"
+  # - "week_sin"
+  # - "week_cos"
 
 # optimizer
 optimizer:
-  lr: 0.00025
+  lr: 0.0005
 
 # scheduler
 scheduler:
