@@ -150,8 +150,7 @@ class SegModel(LightningModule):
             np.save("preds_score.npy", preds)
             val_pred_df.write_csv("val_pred_score_df.csv")
             torch.save(self.model.state_dict(), f"best_model_score.pth")
-            print(f"Saved best score model {self.__best_score} -> {score}, 
-                  epoch {self.current_epoch}")
+            print(f"Saved best score model {self.__best_score} -> {score}, epoch {self.current_epoch}")
             self.__best_score = score
         if loss < self.__best_loss:
             np.save("keys.npy", np.array(keys))
@@ -159,8 +158,7 @@ class SegModel(LightningModule):
             np.save("preds_loss.npy", preds)
             val_pred_df.write_csv("val_pred_loss_df.csv")
             torch.save(self.model.state_dict(), f"best_model_loss.pth")
-            print(f"Saved best loss model {self.__best_loss} -> {loss}, 
-                  epoch {self.current_epoch}")
+            print(f"Saved best loss model {self.__best_loss} -> {loss}, epoch {self.current_epoch}")
         
         self.__best_loss = min(self.__best_loss, loss)
         self.validation_step_outputs.clear()

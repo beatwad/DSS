@@ -13,4 +13,7 @@ rye run python run/train.py -m duration=100,1000,2000 sigma=4,5,6,8,10
 # upload model
 rye run python tools/upload_dataset.py
 
+# delete all *.ckpt files
+find . -name "*.ckpt" -type f -delete
+
 

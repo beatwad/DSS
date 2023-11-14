@@ -269,9 +269,6 @@ class ValidDataset(Dataset):
             start,
             end,
         )
-        # label[:, [1, 2]] = gaussian_label(
-        #     label[:, [1, 2]], offset=self.cfg.offset, sigma=self.cfg.sigma !!!
-        # )
         return {
             "key": key,
             "feature": feature,  # (num_features, duration)
