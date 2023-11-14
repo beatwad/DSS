@@ -14,7 +14,7 @@ defaults:
   - dir: local
   - model: Spec2DCNN
   - feature_extractor: CNNSpectrogram
-  - decoder: TransformerDecoder
+  - decoder: UNet1DDecoder
   - split: fold_0
 
 seed: 42
