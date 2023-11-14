@@ -14,12 +14,12 @@ defaults:
   - dir: local
   - model: Spec2DCNN
   - feature_extractor: CNNSpectrogram
-  - decoder: UNet1DDecoder # TransformerDecoder !!!
+  - decoder: TransformerDecoder
   - split: fold_0
 
 seed: 42
 exp_name: dummy
-duration: 5760 # duration is a multiple of 32, duration * 5 = number of seconds
+duration: 8640 # duration is a multiple of 32, duration * 5 = number of seconds
 downsample_rate: 2
 upsample_rate: 1
 
@@ -38,7 +38,7 @@ check_val_every_n_epoch: 1
 
 # Dataset
 offset: 20 # length of gaussian kernel
-sigma: 6
+sigma: 18
 bg_sampling_rate: 0.5 # probability of negative samples
 
 # augmentation
