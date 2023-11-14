@@ -14,7 +14,7 @@ defaults:
   - dir: local
   - model: Spec2DCNN
   - feature_extractor: CNNSpectrogram
-  - decoder: TransformerDecoder
+  - decoder: UNet1DDecoder
 
 exp_name: dummy
 phase: test
