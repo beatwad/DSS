@@ -4,13 +4,12 @@ from pathlib import Path
 import hydra
 import numpy as np
 import polars as pl
-<<<<<<< HEAD
+
 from astral.geocoder import database, lookup
 from astral.location import Location
 from astral.sun import sun
 from omegaconf import DictConfig
-=======
->>>>>>> 73e41d0057f6c0c90e98fb829c507d65cbf83d49
+
 from tqdm import tqdm
 
 from src.conf import PrepareDataConfig

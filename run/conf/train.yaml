@@ -20,7 +20,6 @@ defaults:
 
 seed: 42
 exp_name: dummy
-<<<<<<< HEAD
 duration: 8640 # duration is a multiple of 32, duration * 5 = number of seconds
 downsample_rate: 2
 upsample_rate: 1
