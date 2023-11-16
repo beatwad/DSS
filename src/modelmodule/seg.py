@@ -18,28 +18,20 @@ from src.utils.metrics import event_detection_ap
 from src.utils.post_process import post_process_for_seg
 
 
-class CosineAnnealingWarmRestartsDecay(CosineAnnealingWarmRestarts):
-    """
-    Cosine anneal scheduler that decays after every cycle
-    """
-    def __init__(self, optimizer, T_0, T_mult=1, eta_min=0, last_epoch=-1, min_lr=1e-4, min_epoch=25):
-        super(CosineAnnealingWarmRestartsDecay, self).__init__(optimizer, T_0, T_mult, eta_min, 
-                                                               last_epoch)
-        self.T_0 = T_0
-        self.min_lr = min_lr
-        self.min_epoch = min_epoch
-        self.optimizer = optimizer
+# class CosineAnnealingWarmRestartsDecay(CosineAnnealingWarmRestarts):
+#     """
+#     Cosine anneal scheduler that decays after every cycle
+#     """
+#     def __init__(self, optimizer, T_0, T_mult=1, eta_min=0, last_epoch=-1):
+#         super(CosineAnnealingWarmRestartsDecay, self).__init__(optimizer, T_0, T_mult, eta_min, 
+#                                                                last_epoch)
+#         self.T_0 = T_0
+#         self.optimizer = optimizer
 
-    def step(self, step=None):
-        # if step is not None and step >= self.min_epoch:
-        self.base_lrs = [max(lrs, self.min_lr) for lrs in self.base_lrs]  
-        super().step(step)
-
-    # def step(self, step=None):
-    #     if step is not None and step > 0 and step % self.T_0 == 0:
-    #         self.base_lrs = [lrs * self.decay for lrs in self.base_lrs]  
-    #     super().step(step)       
-
+#     def step(self, step=None):
+#         if step is not None and step > 0 and step % self.T_0 == 0: # step >= self.min_epoch
+#             self.base_lrs = [lrs * self.decay for lrs in self.base_lrs]  
+#         super().step(step)       
 
 
 class SegModel(LightningModule):
@@ -178,25 +170,22 @@ class SegModel(LightningModule):
 
     def configure_optimizers(self):
         optimizer = optim.AdamW(self.parameters(), lr=self.lr)
-        if self.cfg.scheduler.type == 'min_lr':
-            scheduler = CosineAnnealingWarmRestartsDecay(optimizer, 
-                                                         T_0=self.trainer.max_steps // (2 * self.cfg.accumulate_grad_batches), 
-                                                         T_mult=1, 
-                                                         eta_min=0, 
-                                                         last_epoch=-1,
-                                                         min_lr=self.cfg.scheduler.min_lr,
-                                                         min_epoch=self.cfg.scheduler.min_epoch
-                                                         )
-        else:
-            scheduler = get_cosine_schedule_with_warmup(
-                optimizer, num_training_steps=self.trainer.max_steps, 
-                num_warmup_steps=self.cfg.scheduler.num_warmup_steps
-            )
+        # if self.cfg.scheduler.type == 'min_lr':
+        scheduler = CosineAnnealingWarmRestarts(optimizer, 
+                                                T_0=self.trainer.max_steps // 4, 
+                                                T_mult=1, 
+                                                eta_min=0, 
+                                                last_epoch=-1)
+        # else:
+        #     scheduler = get_cosine_schedule_with_warmup(
+        #         optimizer, num_training_steps=self.trainer.max_steps, 
+        #         num_warmup_steps=self.cfg.scheduler.num_warmup_steps
+        #     )
         return [optimizer], [{"scheduler": scheduler, "interval": "step"}]
 
     def lr_scheduler_step(self, scheduler, metric):
-        if self.cfg.scheduler.type == 'min_lr':
-            scheduler.step()
+        # if self.cfg.scheduler.type == 'min_lr':
+            # scheduler.step()
             # scheduler.step(step=self.global_step)
-        else:
-            scheduler.step()
+        # else:
+        scheduler.step()

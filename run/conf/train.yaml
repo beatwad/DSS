@@ -25,20 +25,20 @@ upsample_rate: 1
 
 # training
 epoch: 50
-batch_size: 24
+batch_size: 8
 num_workers: 12
 accelerator: auto
 use_amp: true
 debug: false
 gradient_clip_val: 1.0
-accumulate_grad_batches: 2 # 1
+accumulate_grad_batches: 4 # 1
 monitor: val_loss
 monitor_mode: min
 check_val_every_n_epoch: 1
 
 # Dataset
 offset: 20 # length of gaussian kernel
-sigma: 6
+sigma: 12
 bg_sampling_rate: 0.5 # probability of negative samples
 
 # augmentation
@@ -79,7 +79,7 @@ optimizer:
 
 # scheduler
 scheduler:
-  type: base # min_lr
+  type: min_lr
   min_lr: 1e-4
   min_epoch: 30
   num_warmup_steps: 0

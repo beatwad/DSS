@@ -1,5 +1,5 @@
 name: TransformerDecoder
-hidden_size: 256
-num_layers: 4
-nhead: 4
-dropout: 0.2
+hidden_size: 256 # slows down a lot
+num_layers: 4 # can be changed
+nhead: 4 # changes nothing
+dropout: 0.2 # can be changed
