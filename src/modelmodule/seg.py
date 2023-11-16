@@ -17,7 +17,6 @@ from src.models.common import get_model
 from src.utils.metrics import event_detection_ap
 from src.utils.post_process import post_process_for_seg
 
-
 # class CosineAnnealingWarmRestartsDecay(CosineAnnealingWarmRestarts):
 #     """
 #     Cosine anneal scheduler that decays after every cycle
@@ -172,7 +171,7 @@ class SegModel(LightningModule):
         optimizer = optim.AdamW(self.parameters(), lr=self.lr)
         # if self.cfg.scheduler.type == 'min_lr':
         scheduler = CosineAnnealingWarmRestarts(optimizer, 
-                                                T_0=self.trainer.max_steps // 4, 
+                                                T_0=self.trainer.max_steps // 2, 
                                                 T_mult=1, 
                                                 eta_min=0, 
                                                 last_epoch=-1)
