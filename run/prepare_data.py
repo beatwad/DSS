@@ -4,12 +4,16 @@ from pathlib import Path
 import hydra
 import numpy as np
 import polars as pl
+<<<<<<< HEAD
 from astral.geocoder import database, lookup
 from astral.location import Location
 from astral.sun import sun
 from omegaconf import DictConfig
+=======
+>>>>>>> 73e41d0057f6c0c90e98fb829c507d65cbf83d49
 from tqdm import tqdm
 
+from src.conf import PrepareDataConfig
 from src.utils.common import trace
 
 SERIES_SCHEMA = {
@@ -23,17 +27,15 @@ SERIES_SCHEMA = {
 FEATURE_NAMES = [
     "anglez",
     "enmo",
+    "step",
     "hour_sin",
     "hour_cos",
-    # "day_sin",
-    # "day_cos",
-    # "month_sin",
-    # "month_cos",
-    # "minute_sin",
-    # "minute_cos",
-    # "week_sin",
-    # "week_cos",
-    # "sun_event",
+    "month_sin",
+    "month_cos",
+    "minute_sin",
+    "minute_cos",
+    "anglez_sin",
+    "anglez_cos",
 ]
 
 ANGLEZ_MEAN = -8.810476
@@ -81,14 +83,23 @@ def to_coord(x: pl.Expr, max_: int, name: str) -> list[pl.Expr]:
     return [x_sin.alias(f"{name}_sin"), x_cos.alias(f"{name}_cos")]
 
 
+def deg_to_rad(x: pl.Expr) -> pl.Expr:
+    return np.pi / 180 * x
+
+
 def add_feature(series_df: pl.DataFrame) -> pl.DataFrame:
-    series_df = series_df.with_columns(
-        *to_coord(pl.col("timestamp").dt.day(), 366, "day"),
-        *to_coord(pl.col("timestamp").dt.week(), 53, "week"),
-        *to_coord(pl.col("timestamp").dt.hour(), 24, "hour"),
-        *to_coord(pl.col("timestamp").dt.month(), 12, "month"),
-        *to_coord(pl.col("timestamp").dt.minute(), 60, "minute"),
-    ).select("series_id", *FEATURE_NAMES)
+    series_df = (
+        series_df.with_row_count("step")
+        .with_columns(
+            *to_coord(pl.col("timestamp").dt.hour(), 24, "hour"),
+            *to_coord(pl.col("timestamp").dt.month(), 12, "month"),
+            *to_coord(pl.col("timestamp").dt.minute(), 60, "minute"),
+            pl.col("step") / pl.count("step"),
+            pl.col('anglez_rad').sin().alias('anglez_sin'),
+            pl.col('anglez_rad').cos().alias('anglez_cos'),
+        )
+        .select("series_id", *FEATURE_NAMES)
+    )
     return series_df
 
 
@@ -101,7 +112,7 @@ def save_each_series(this_series_df: pl.DataFrame, columns: list[str], output_di
 
 
 @hydra.main(config_path="conf", config_name="prepare_data", version_base="1.2")
-def main(cfg: DictConfig):
+def main(cfg: PrepareDataConfig):
     processed_dir: Path = Path(cfg.dir.processed_dir) / cfg.phase
 
     # delete the directory if it exists
@@ -128,10 +139,19 @@ def main(cfg: DictConfig):
         series_df = (
             series_lf.with_columns(
                 pl.col("timestamp").str.to_datetime("%Y-%m-%dT%H:%M:%S%z"),
+                deg_to_rad(pl.col("anglez")).alias("anglez_rad"),
                 (pl.col("anglez") - ANGLEZ_MEAN) / ANGLEZ_STD,
                 (pl.col("enmo") - ENMO_MEAN) / ENMO_STD,
             )
-            .select([pl.col("series_id"), pl.col("anglez"), pl.col("enmo"), pl.col("timestamp")])
+            .select(
+                [
+                    pl.col("series_id"),
+                    pl.col("anglez"),
+                    pl.col("enmo"),
+                    pl.col("timestamp"),
+                    pl.col("anglez_rad"),
+                ]
+            )
             .collect(streaming=True)
             .sort(by=["series_id", "timestamp"])
         )

@@ -5,27 +5,27 @@ import hydra
 import numpy as np
 import polars as pl
 import torch
-import torch.nn as nn
-from omegaconf import DictConfig
 from pytorch_lightning import seed_everything
 from torch.utils.data import DataLoader
-from torchvision.transforms.functional import resize
 from tqdm import tqdm
 
-from src.datamodule.seg import (TestDataset, load_chunk_features,
-                                nearest_valid_size)
+from src.conf import InferenceConfig
+from src.datamodule import load_chunk_features
+from src.dataset.common import get_test_ds
+from src.models.base import BaseModel
 from src.models.common import get_model
-from src.utils.common import trace
+from src.utils.common import nearest_valid_size, trace
 from src.utils.post_process import post_process_for_seg
 
 
-def load_model(cfg: DictConfig) -> nn.Module:
+def load_model(cfg: InferenceConfig) -> BaseModel:
     num_timesteps = nearest_valid_size(int(cfg.duration * cfg.upsample_rate), cfg.downsample_rate)
     model = get_model(
         cfg,
         feature_dim=len(cfg.features),
         n_classes=len(cfg.labels),
         num_timesteps=num_timesteps // cfg.downsample_rate,
+        test=True,
     )
 
     # load weights
@@ -42,7 +42,7 @@ def load_model(cfg: DictConfig) -> nn.Module:
     return model
 
 
-def get_test_dataloader(cfg: DictConfig) -> DataLoader:
+def get_test_dataloader(cfg: InferenceConfig) -> DataLoader:
     """get test dataloader
 
     Args:
@@ -60,7 +60,7 @@ def get_test_dataloader(cfg: DictConfig) -> DataLoader:
         processed_dir=Path(cfg.dir.processed_dir),
         phase=cfg.phase,
     )
-    test_dataset = TestDataset(cfg, chunk_features=chunk_features)
+    test_dataset = get_test_ds(cfg, chunk_features=chunk_features)
     test_dataloader = DataLoader(
         test_dataset,
         batch_size=cfg.batch_size,
@@ -73,7 +73,7 @@ def get_test_dataloader(cfg: DictConfig) -> DataLoader:
 
 
 def inference(
-    duration: int, loader: DataLoader, model: nn.Module, device: torch.device, use_amp
+    duration: int, loader: DataLoader, model: BaseModel, device: torch.device, use_amp
 ) -> tuple[list[str], np.ndarray]:
     model = model.to(device)
     model.eval()
@@ -84,15 +84,16 @@ def inference(
         with torch.no_grad():
             with torch.cuda.amp.autocast(enabled=use_amp):
                 x = batch["feature"].to(device)
-                pred = model(x)["logits"].sigmoid()
-                pred = resize(
-                    pred.detach().cpu(),
-                    size=[duration, pred.shape[2]],
-                    antialias=False,
+                output = model.predict(
+                    x,
+                    org_duration=duration,
                 )
-            key = batch["key"]
-            preds.append(pred.detach().cpu().numpy())
-            keys.extend(key)
+            if output.preds is None:
+                raise ValueError("output.preds is None")
+            else:
+                key = batch["key"]
+                preds.append(output.preds.detach().cpu().numpy())
+                keys.extend(key)
 
     preds = np.concatenate(preds)
 
@@ -100,11 +101,11 @@ def inference(
 
 
 def make_submission(
-    keys: list[str], preds: np.ndarray, downsample_rate, score_th, distance
+    keys: list[str], preds: np.ndarray, score_th, distance
 ) -> pl.DataFrame:
     sub_df = post_process_for_seg(
         keys,
-        preds[:, :, [1, 2]],  # type: ignore
+        preds,  # type: ignore
         score_th=score_th,
         distance=distance,  # type: ignore
     )
@@ -113,7 +114,7 @@ def make_submission(
 
 
 @hydra.main(config_path="conf", config_name="inference", version_base="1.2")
-def main(cfg: DictConfig):
+def main(cfg: InferenceConfig):
     seed_everything(cfg.seed)
 
     with trace("load test dataloader"):
@@ -129,9 +130,8 @@ def main(cfg: DictConfig):
         sub_df = make_submission(
             keys,
             preds,
-            downsample_rate=cfg.downsample_rate,
-            score_th=cfg.post_process.score_th,
-            distance=cfg.post_process.distance,
+            score_th=cfg.pp.score_th,
+            distance=cfg.pp.distance,
         )
     sub_df.write_csv(Path(cfg.dir.sub_dir) / "submission.csv")
 

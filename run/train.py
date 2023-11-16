@@ -3,15 +3,15 @@ from pathlib import Path
 
 import hydra
 import torch
-from omegaconf import DictConfig
 from pytorch_lightning import Trainer, seed_everything
 from pytorch_lightning.callbacks import (LearningRateMonitor, ModelCheckpoint,
                                          RichModelSummary, RichProgressBar,
                                          StochasticWeightAveraging)
 from pytorch_lightning.loggers import WandbLogger
 
-from src.datamodule.seg import SegDataModule
-from src.modelmodule.seg import SegModel
+from src.conf import TrainConfig
+from src.datamodule import SleepDataModule
+from src.modelmodule import PLSleepModel
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s:%(name)s - %(message)s"
@@ -20,21 +20,21 @@ LOGGER = logging.getLogger(Path(__file__).name)
 
 
 @hydra.main(config_path="conf", config_name="train", version_base="1.2")
-def main(cfg: DictConfig):  # type: ignore
+def main(cfg: TrainConfig):
     seed_everything(cfg.seed)
 
     # init lightning model
-    datamodule = SegDataModule(cfg)
+    datamodule = SleepDataModule(cfg)
     LOGGER.info("Set Up DataModule")
-    model = SegModel(
+    model = PLSleepModel(
         cfg, datamodule.valid_event_df, len(cfg.features), len(cfg.labels), cfg.duration
     )
 
     # set callbacks
     checkpoint_cb = ModelCheckpoint(
         verbose=True,
-        monitor=cfg.monitor,
-        mode=cfg.monitor_mode,
+        monitor=cfg.trainer.monitor,
+        mode=cfg.trainer.monitor_mode,
         save_top_k=1,
         save_last=False,
     )
@@ -49,13 +49,14 @@ def main(cfg: DictConfig):  # type: ignore
         name=cfg.exp_name,
         project="child-mind-institute-detect-sleep-states",
     )
+    pl_logger.log_hyperparams(cfg)
 
     trainer = Trainer(
         # env
         default_root_dir=Path.cwd(),
         # num_nodes=cfg.training.num_gpus,
-        accelerator=cfg.accelerator,
-        precision=16 if cfg.use_amp else 32,
+        accelerator=cfg.trainer.accelerator,
+        precision=16 if cfg.trainer.use_amp else 32,
         # training
         fast_dev_run=cfg.debug,  # run only 1 train batch and 1 val batch
         max_epochs=cfg.epoch,
@@ -68,7 +69,7 @@ def main(cfg: DictConfig):  # type: ignore
         num_sanity_val_steps=0,
         log_every_n_steps=int(len(datamodule.train_dataloader()) * 0.1),
         sync_batchnorm=True,
-        check_val_every_n_epoch=cfg.check_val_every_n_epoch,
+        check_val_every_n_epoch=cfg.trainer.check_val_every_n_epoch,
     )
 
     trainer.fit(model, datamodule=datamodule)

@@ -1,4 +1,3 @@
-name: TransformerDecoder
 hidden_size: 256 # slows down a lot
 num_layers: 4 # can be changed
 nhead: 4 # changes nothing

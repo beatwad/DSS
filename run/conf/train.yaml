@@ -12,6 +12,7 @@ hydra:
 defaults:
   - _self_
   - dir: local
+  - dataset: seg
   - model: Spec2DCNN
   - feature_extractor: CNNSpectrogram
   - decoder: TransformerDecoder
@@ -19,6 +20,7 @@ defaults:
 
 seed: 42
 exp_name: dummy
+<<<<<<< HEAD
 duration: 8640 # duration is a multiple of 32, duration * 5 = number of seconds
 downsample_rate: 2
 upsample_rate: 1
@@ -63,6 +65,7 @@ labels:
 features:
   - "anglez"
   - "enmo"
+  # - "step"
   # - "month_sin"
   # - "month_cos"
   - "hour_sin"
@@ -72,6 +75,8 @@ features:
   # - "sun_event"
   # - "week_sin"
   # - "week_cos"
+  # - "anglez_sin"
+  # - "anglez_cos"
 
 # optimizer
 optimizer:

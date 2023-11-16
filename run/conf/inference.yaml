@@ -12,6 +12,7 @@ hydra:
 defaults:
   - _self_
   - dir: local
+  - dataset: seg
   - model: Spec2DCNN
   - feature_extractor: CNNSpectrogram
   - decoder: TransformerDecoder
@@ -32,7 +33,7 @@ num_workers: 2
 use_amp: true
 
 # augmentation
-augmentation:
+aug:
   mixup_prob: 0.0
   mixup_alpha: 0.4
   cutmix_prob: 0.0
