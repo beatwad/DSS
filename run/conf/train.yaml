@@ -13,7 +13,7 @@ defaults:
   - _self_
   - dir: local
   - dataset: seg
-  - model: Spec2DCNN
+  - model: Seg
   - feature_extractor: CNNSpectrogram
   - decoder: TransformerDecoder
   - split: fold_3

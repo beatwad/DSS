@@ -37,7 +37,7 @@ class Spec2DCNN(BaseModel):
     ):
         super().__init__()
         self.feature_extractor = feature_extractor
-        self.encoder = smp.DeepLabV3Plus(
+        self.encoder = smp.UnetPlusPlus(
             encoder_name=encoder_name,
             encoder_weights=encoder_weights,
             in_channels=in_channels,
