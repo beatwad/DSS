@@ -35,7 +35,7 @@ def load_model(cfg: InferenceConfig) -> BaseModel:
         elif cfg.best_model == 'score':
             weight_path = f'{cfg.dir.model_dir}/{cfg.weight["exp_name"]}/*_score.pth'
         else:
-            raise('Incorrect best_model type')
+            weight_path = f'{cfg.dir.model_dir}/{cfg.weight["exp_name"]}/*_epoch.pth'
         weight_path = glob.glob(weight_path)[0]
         model.load_state_dict(torch.load(weight_path))
         print(f'load weight from {weight_path}')
