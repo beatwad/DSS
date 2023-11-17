@@ -135,12 +135,12 @@ class PLSleepModel(LightningModule):
             val_pred_df.write_csv("val_pred_loss_df.csv")
             torch.save(self.model.state_dict(), f"best_model_loss.pth")
             print(f"Save best loss model {self.__best_loss} -> {loss}, epoch {self.current_epoch}")
-        if self.current_epoch > 30 and self.current_epoch % 5 == 0:
+        if self.current_epoch > 40 and self.current_epoch + 1 % 5 == 0:
             np.save("keys.npy", np.array(keys))
-            np.save(f"labels_ep_{self.current_epoch}.npy", labels)
-            np.save(f"preds_loss_ep_{self.current_epoch}.npy", preds)
-            val_pred_df.write_csv(f"val_pred_df_ep_{self.current_epoch}.csv")
-            torch.save(self.model.state_dict(), f"model_ep_{self.current_epoch}.pth")
+            np.save(f"labels_{self.current_epoch}_epoch.npy", labels)
+            np.save(f"preds_loss_{self.current_epoch}_epoch.npy", preds)
+            val_pred_df.write_csv(f"val_pred_df_{self.current_epoch}_epoch.csv")
+            torch.save(self.model.state_dict(), f"model_{self.current_epoch}_epoch.pth")
             print(f"Save model, epoch {self.current_epoch}")
         
         self.__best_loss = min(self.__best_loss, loss)
