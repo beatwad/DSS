@@ -12,8 +12,8 @@ hydra:
 defaults:
   - _self_
   - dir: local
-  - dataset: centernet
-  - model: CenterNet
+  - dataset: seg
+  - model: Spec2DCNN
   - feature_extractor: CNNSpectrogram
   - decoder: TransformerDecoder
 
