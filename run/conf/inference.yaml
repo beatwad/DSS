@@ -40,7 +40,7 @@ aug:
   cutmix_alpha: 0.4
 
 # post_process
-post_process:
+pp:
   score_th: 0.0001
   distance: 90
 
