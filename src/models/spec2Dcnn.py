@@ -10,6 +10,7 @@ from src.augmentation.cutmix import Cutmix
 from src.augmentation.mixup import Mixup
 from src.models.base import BaseModel
 
+
 class FocalLoss(nn.Module):
     def __init__(self, weight=None, size_average=True, alpha=1., gamma=2.):
         super(FocalLoss, self).__init__()
@@ -36,7 +37,7 @@ class Spec2DCNN(BaseModel):
     ):
         super().__init__()
         self.feature_extractor = feature_extractor
-        self.encoder = smp.UnetPlusPlus(
+        self.encoder = smp.DeepLabV3Plus(
             encoder_name=encoder_name,
             encoder_weights=encoder_weights,
             in_channels=in_channels,

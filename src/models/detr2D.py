@@ -224,7 +224,7 @@ class DETR2DCNN(BaseModel):
     ):
         super().__init__()
         self.feature_extractor = feature_extractor
-        self.encoder = smp.Unet(
+        self.encoder = smp.Unet( # UnetPlusPlus
             encoder_name=encoder_name,
             encoder_weights=encoder_weights,
             in_channels=in_channels,

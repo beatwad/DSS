@@ -58,11 +58,11 @@ def main(cfg: TrainConfig):
         accelerator=cfg.trainer.accelerator,
         precision=16 if cfg.trainer.use_amp else 32,
         # training
-        fast_dev_run=cfg.debug,  # run only 1 train batch and 1 val batch
-        max_epochs=cfg.epoch,
-        max_steps=cfg.epoch * len(datamodule.train_dataloader()),  # 50 * 119
-        gradient_clip_val=cfg.gradient_clip_val,
-        accumulate_grad_batches=cfg.accumulate_grad_batches,
+        fast_dev_run=cfg.trainer.debug,  # run only 1 train batch and 1 val batch
+        max_epochs=cfg.trainer.epoch,
+        max_steps=cfg.trainer.epoch * len(datamodule.train_dataloader()),  # 50 * 119
+        gradient_clip_val=cfg.trainer.gradient_clip_val,
+        accumulate_grad_batches=cfg.trainer.accumulate_grad_batches,
         callbacks=[lr_monitor, progress_bar, model_summary], # checkpoint_cb, swa],
         logger=pl_logger,
         # resume_from_checkpoint=resume_from,

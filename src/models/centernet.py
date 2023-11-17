@@ -89,7 +89,7 @@ class CenterNet(BaseModel):
     ):
         super().__init__()
         self.feature_extractor = feature_extractor
-        self.encoder = smp.Unet(
+        self.encoder = smp.UnetPlusPlus(
             encoder_name=encoder_name,
             encoder_weights=encoder_weights,
             in_channels=in_channels,
@@ -154,11 +154,12 @@ class CenterNet(BaseModel):
         x = np.arange(org_duration)
         proba_per_step = np.zeros((bs, org_duration, 2))
         for i in range(bs):
-            # pred_posが重複する場合は、確率が高い方を採用する
+            # pred_pos, if there are duplicates, select the one with higher probability
             pred_onset_pos_i, pred_onset_i = np_groupby_max(pred_onset_pos[i], pred_onset[i])
             pred_wakeup_pos_i, pred_wakeup_i = np_groupby_max(pred_wakeup_pos[i], pred_wakeup[i])
 
-            # もとの長さに戻す. 予測値がない部分は線形補間
+            # return to the original length,
+            # linear interpolation is used for parts without predicted values.
             f_onset = interp1d(
                 pred_onset_pos_i, pred_onset_i, kind="linear", fill_value=0, bounds_error=False
             )

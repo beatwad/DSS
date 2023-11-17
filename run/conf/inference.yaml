@@ -12,8 +12,8 @@ hydra:
 defaults:
   - _self_
   - dir: local
-  - dataset: seg
-  - model: Spec2DCNN
+  - dataset: centernet
+  - model: CenterNet
   - feature_extractor: CNNSpectrogram
   - decoder: TransformerDecoder
 
@@ -28,7 +28,7 @@ seed: 42
 duration: 8640 # duration is a number of samples (5 sec), total 8 hours
 downsample_rate: 2 # the value of duration divided by downsample_rate is num_frames
 upsample_rate: 1
-batch_size: 24
+batch_size: 16
 num_workers: 2
 use_amp: true
 

@@ -171,7 +171,11 @@ def event_detection_ap(
         )
     )
     # Average over tolerances, then over event classes
-    mean_ap = ap_table.groupby(event_column_name).mean().sum() / len(event_classes)
+    try:
+        mean_ap = ap_table.groupby(event_column_name).mean().sum() / len(event_classes)
+    except ValueError:
+        print('ValueError during mean_ap calculation')
+        mean_ap = 0
 
     return mean_ap
 
