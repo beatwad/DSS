@@ -23,7 +23,7 @@ exp_name: dummy
 duration: 8640 # duration is a multiple of 32, duration * 5 = number of seconds
 downsample_rate: 2
 upsample_rate: 1
-batch_size: 16 # 8 !!!
+batch_size: 16 
 num_workers: 12
 
 trainer:
@@ -32,7 +32,7 @@ trainer:
   use_amp: true
   debug: false
   gradient_clip_val: 1.0
-  accumulate_grad_batches: 2 # 4 !!!
+  accumulate_grad_batches: 2
   monitor: val_loss
   monitor_mode: min
   check_val_every_n_epoch: 1
@@ -75,6 +75,7 @@ features:
 # optimizer
 optimizer:
   lr: 5e-4
+  weight_decay: 1e-5
 
 # scheduler
 scheduler:
@@ -82,3 +83,11 @@ scheduler:
   min_lr: 1e-4
   min_epoch: 30
   num_warmup_steps: 0
+
+
+weight:
+  best_model: epoch
+  load: false
+  exp_name: ${exp_name}
+  run_name: single
+  epoch: 45

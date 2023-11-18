@@ -1,3 +1,4 @@
+import glob
 import logging
 from pathlib import Path
 
@@ -12,6 +13,8 @@ from pytorch_lightning.loggers import WandbLogger
 from src.conf import TrainConfig
 from src.datamodule import SleepDataModule
 from src.modelmodule import PLSleepModel
+from src.models.common import get_model
+from src.utils.common import nearest_valid_size
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s:%(name)s - %(message)s"
@@ -30,19 +33,34 @@ def main(cfg: TrainConfig):
         cfg, datamodule.valid_event_df, len(cfg.features), len(cfg.labels), cfg.duration
     )
 
+    # load weights
+    if cfg.weight.load:
+        ckpt_path = f'{cfg.dir.output_dir}/train/{cfg.weight["exp_name"]}/single/*.ckpt'
+        ckpt_path = glob.glob(ckpt_path)[0]
+        model = model.load_from_checkpoint(
+                                        ckpt_path,
+                                        cfg=cfg,
+                                        val_event_df=datamodule.valid_event_df,
+                                        feature_dim=len(cfg.features),
+                                        num_classes=len(cfg.labels),
+                                        duration=cfg.duration,
+                                        )
+        print(f'load checkpoint from {ckpt_path}')
+
     # set callbacks
-    checkpoint_cb = ModelCheckpoint(
-        verbose=True,
-        monitor=cfg.trainer.monitor,
-        mode=cfg.trainer.monitor_mode,
-        save_top_k=1,
-        save_last=False,
-    )
+    # checkpoint_cb = ModelCheckpoint(
+    #     verbose=True,
+    #     monitor=cfg.trainer.monitor,
+    #     mode=cfg.trainer.monitor_mode,
+    #     save_top_k=1,
+    #     save_last=False,
+    # )
+
     lr_monitor = LearningRateMonitor("epoch")
     progress_bar = RichProgressBar()
     model_summary = RichModelSummary(max_depth=2)
-    swa = StochasticWeightAveraging(swa_lrs=cfg.optimizer.lr/10, swa_epoch_start=0.5, 
-                                    annealing_strategy='cos', annealing_epochs=1)
+    # swa = StochasticWeightAveraging(swa_lrs=cfg.optimizer.lr/10, swa_epoch_start=0.5, 
+    #                                 annealing_strategy='cos', annealing_epochs=1)
 
     # init experiment logger
     pl_logger = WandbLogger(

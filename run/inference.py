@@ -39,6 +39,7 @@ def load_model(cfg: InferenceConfig) -> BaseModel:
         weight_path = glob.glob(weight_path)[0]
         model.load_state_dict(torch.load(weight_path))
         print(f'load weight from {weight_path}')
+        
     return model
 
 
