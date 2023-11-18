@@ -42,7 +42,7 @@ class Spec2DCNN(BaseModel):
             encoder_weights=encoder_weights,
             in_channels=in_channels,
             classes=1,
-            decoder_attention_type=None # scse !!!
+            decoder_attention_type='scse',
         )
         self.decoder = decoder
         self.mixup = Mixup(mixup_alpha)

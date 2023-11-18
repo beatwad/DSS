@@ -75,7 +75,7 @@ features:
 # optimizer
 optimizer:
   lr: 5e-4
-  weight_decay: 1e-5
+  weight_decay: 1e-2
 
 # scheduler
 scheduler:
