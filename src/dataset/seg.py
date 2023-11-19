@@ -8,8 +8,10 @@ from torch.utils.data import Dataset
 from torchvision.transforms.functional import resize
 
 from src.conf import InferenceConfig, TrainConfig
-from src.utils.common import gaussian_label, nearest_valid_size, negative_sampling, random_crop
-from src.utils.common import pad_if_needed
+from src.utils.common import (add_gaussian_sleep, gaussian_label,
+                              nearest_valid_size, negative_sampling,
+                              pad_if_needed, random_crop)
+
 
 ###################
 # Label
@@ -92,6 +94,8 @@ class SegTrainDataset(Dataset):
         # from hard label to gaussian label
         num_frames = self.upsampled_num_frames // self.cfg.downsample_rate
         label = get_seg_label(this_event_df, num_frames, self.cfg.duration, start, end)
+        
+        label[:, 0] = add_gaussian_sleep(label[:, 0], offset=self.cfg.dataset.offset)
         label[:, [1, 2]] = gaussian_label(
             label[:, [1, 2]], offset=self.cfg.dataset.offset, sigma=self.cfg.dataset.sigma
         )

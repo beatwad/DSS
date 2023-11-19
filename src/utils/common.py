@@ -84,3 +84,36 @@ def gaussian_label(label: np.ndarray, offset: int, sigma: int) -> np.ndarray:
         label[:, i] = np.convolve(label[:, i], gaussian_kernel(offset, sigma), mode="same")
 
     return label
+
+def add_gaussian_sleep(label, offset=20):
+    idxs = np.where(np.diff(label) == 1)
+    
+    for idx in idxs:
+        if len(idx) > 0:
+            idx = idx[0]
+
+            z = gaussian_kernel(offset*2, sigma=offset//2)[:offset*2]
+            
+            if idx-offset < 0:
+                z = z[offset-idx:]
+            elif idx+offset > label.shape[0]:
+                z = z[:label.shape[0]-idx-offset]
+
+            label[max(idx-offset, 0):min(idx+offset, label.shape[0])] = z
+
+    idxs = np.where(np.diff(label) == -1)
+    
+    for idx in idxs:
+        if len(idx) > 0:
+            idx = idx[0]
+
+            z = gaussian_kernel(offset*2, sigma=offset//2)[offset*2+1:]
+            
+            if idx-offset < 0:
+                z = z[offset-idx:]
+            elif idx+offset > label.shape[0]:
+                z = z[:label.shape[0]-idx-offset]
+
+            label[max(idx-offset, 0):min(idx+offset, label.shape[0])] = z
+
+    return label
