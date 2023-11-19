@@ -21,9 +21,32 @@ class FocalLoss(nn.Module):
     def forward(self, inputs, targets):
         BCE = self.criterion(inputs, targets)
         BCE_EXP = torch.exp(-BCE)
-        focal_loss = self.alpha * (1-BCE_EXP)**self.gamma * BCE
-                    
+        focal_loss = self.alpha * (1-BCE_EXP)**self.gamma * BCE          
         return torch.mean(focal_loss)
+    
+class KLDLoss(nn.Module):
+    def __init__(self):
+        super(KLDLoss, self).__init__()
+        self.criterion = nn.KLDivLoss(reduction='batchmean')
+
+    def forward(self, inputs, targets):
+        inputs = F.log_softmax(inputs, dim=2)
+        targets = F.softmax(inputs, dim=2)
+        output = self.criterion(inputs, targets)   
+        return output
+    
+class GaussianLoss(nn.Module):
+    def __init__(self):
+        super(GaussianLoss, self).__init__()
+        self.criterion = nn.GaussianNLLLoss(reduction='mean')
+
+    def forward(self, inputs, targets):
+        # inputs = F.log_softmax(inputs, dim=2)
+        # targets = F.softmax(inputs, dim=2)
+        var = torch.ones_like(inputs, requires_grad=True)
+        output = self.criterion(inputs, targets, var)   
+        return output
+    
 class Spec2DCNN(BaseModel):
     def __init__(
         self,
@@ -48,6 +71,8 @@ class Spec2DCNN(BaseModel):
         self.mixup = Mixup(mixup_alpha)
         self.cutmix = Cutmix(cutmix_alpha)
         self.loss_fn = nn.BCEWithLogitsLoss()
+        # self.loss_fn = KLDLoss()
+        # self.loss_fn = GaussianLoss()
         # self.loss_fn = FocalLoss(alpha=1., gamma=2.)
 
     def _forward(

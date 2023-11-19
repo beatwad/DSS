@@ -95,7 +95,7 @@ class SegTrainDataset(Dataset):
         num_frames = self.upsampled_num_frames // self.cfg.downsample_rate
         label = get_seg_label(this_event_df, num_frames, self.cfg.duration, start, end)
         
-        label[:, 0] = add_gaussian_sleep(label[:, 0], offset=self.cfg.dataset.offset)
+        # label[:, 0] = add_gaussian_sleep(label[:, 0], offset=self.cfg.dataset.offset)
         label[:, [1, 2]] = gaussian_label(
             label[:, [1, 2]], offset=self.cfg.dataset.offset, sigma=self.cfg.dataset.sigma
         )
