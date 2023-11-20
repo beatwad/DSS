@@ -138,7 +138,8 @@ def main(cfg: InferenceConfig):
     with trace("load test dataloader"):
         test_dataloader = get_test_dataloader(cfg)
     with trace("load model"):
-        models = load_model(cfg)
+        weights = get_weight_paths(cfg)
+        models = load_model(cfg, weights)
     
     keys, preds = None, None
     for model in models:
