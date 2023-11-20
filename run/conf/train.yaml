@@ -16,14 +16,14 @@ defaults:
   - model: Spec2DCNN
   - feature_extractor: CNNSpectrogram
   - decoder: TransformerDecoder
-  - split: fold_3
+  - split: fold_0
 
 seed: 42
 exp_name: dummy
 duration: 8640 # duration is a multiple of 32, duration * 5 = number of seconds
 downsample_rate: 2
 upsample_rate: 1
-batch_size: 8 
+batch_size: 8
 num_workers: 12
 
 trainer:

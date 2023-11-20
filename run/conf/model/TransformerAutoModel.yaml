@@ -1,5 +1,6 @@
 name: TransformerAutoModel
 params:
-  model_name: "microsoft/deberta-v3-small" #  推論時はinternet offなので、datasetから取得したconfigを使う
+  model_name: ${dir.t_automodel_dir} #  Since the internet is off during inference, 
+                                 #  use the config obtained from dataset
   hidden_size: 120
   stride: ${downsample_rate}

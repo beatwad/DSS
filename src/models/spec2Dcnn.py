@@ -97,8 +97,48 @@ class Spec2DCNN(BaseModel):
         else:
             return logits
 
+    @torch.no_grad()
+    def predict(
+        self,
+        x: torch.Tensor,
+        org_duration: int,
+        labels: Optional[torch.Tensor] = None,
+    ):
+        output = self.forward(x, labels, False, False)
+        
+        # return logits back to original shape # !!!
+        # sleep
+        preds = output.logits
+        preds0 = preds[:, :, [0]]
+        preds0 = preds0[:, :preds.shape[1] // 2, :]
+        # onset
+        preds1 = preds[:, :, [1]]
+        preds1_0, preds1_1 = torch.split(preds1, preds.shape[1] // 2, dim=1)
+        preds1_1 = torch.flip(preds1_1, [1])
+        # wakeup
+        preds2 = preds[:, :, [2]]
+        preds2_0, preds2_1 = torch.split(preds2, preds.shape[1] // 2, dim=1)
+        preds2_1 = torch.flip(preds2_1, [1])
+        # average predictions of direct and mirrored events
+        preds1 = torch.mean(torch.stack([preds1_0, preds2_1]), dim=0)
+        preds2 = torch.mean(torch.stack([preds2_0, preds1_1]), dim=0)
+        # concat all preds together
+        preds = torch.cat((preds0, preds1, preds2), dim=2)
+        # return labels back to original shape
+        labels = output.labels
+        labels = labels[:, :labels.shape[1] // 2, :]
+
+        preds = self._logits_to_proba_per_step(preds, org_duration)
+        output.preds = preds
+
+        labels = self._correct_labels(labels, org_duration)
+        output.labels = labels
+
+        return output
+    
     def _logits_to_proba_per_step(self, logits: torch.Tensor, org_duration: int) -> torch.Tensor:
         preds = logits.sigmoid()
+        
         return resize(preds, size=[org_duration, preds.shape[-1]], antialias=False)[:, :, [1, 2]]
 
     def _correct_labels(self, labels: torch.Tensor, org_duration: int) -> torch.Tensor:

@@ -31,7 +31,6 @@ class TransformerAutoModel(BaseModel):
             padding=(stride - 1) // 2,
         )
         self.pool = nn.AdaptiveAvgPool1d(out_size)
-        # 推論時はinternet offなので、datasetから取得したconfigを使う
         self.config = AutoConfig.from_pretrained(model_name, hidden_size=hidden_size)
         self.backbone = AutoModel.from_config(self.config)
         self.head = nn.Linear(hidden_size, n_classes)

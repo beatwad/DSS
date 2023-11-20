@@ -99,6 +99,18 @@ class SegTrainDataset(Dataset):
             label[:, [1, 2]], offset=self.cfg.dataset.offset, sigma=self.cfg.dataset.sigma
         )
 
+        feature = torch.cat((feature, torch.flip(feature, [1])), 1) # !!!
+        
+        label = torch.FloatTensor(label)
+        l1 = label[:,0]
+        l2_tmp = label[:,1]
+        l3_tmp = label[:,2]
+
+        l1 = torch.cat((l1, torch.flip(l1, [0])), 0).view(-1, 1)
+        l2 = torch.cat((l2_tmp, torch.flip(l3_tmp, [0])), 0).view(-1, 1)
+        l3 = torch.cat((l3_tmp, torch.flip(l2_tmp, [0])), 0).view(-1, 1)
+        label = torch.cat((l1, l2, l3), 1)
+        
         return {
             "series_id": series_id,
             "feature": feature,  # (num_features, upsampled_num_frames)
@@ -144,6 +156,7 @@ class SegValidDataset(Dataset):
         start = chunk_id * self.cfg.duration
         end = start + self.cfg.duration
         num_frames = self.upsampled_num_frames // self.cfg.downsample_rate
+        
         label = get_seg_label(
             self.event_df.query("series_id == @series_id").reset_index(drop=True),
             num_frames,
@@ -151,10 +164,23 @@ class SegValidDataset(Dataset):
             start,
             end,
         )
+        
+        feature = torch.cat((feature, torch.flip(feature, [1])), 1) # !!!
+        
+        label = torch.FloatTensor(label)
+        l1 = label[:,0]
+        l2_tmp = label[:,1]
+        l3_tmp = label[:,2]
+
+        l1 = torch.cat((l1, torch.flip(l1, [0])), 0).view(-1, 1)
+        l2 = torch.cat((l2_tmp, torch.flip(l3_tmp, [0])), 0).view(-1, 1)
+        l3 = torch.cat((l3_tmp, torch.flip(l2_tmp, [0])), 0).view(-1, 1)
+        label = torch.cat((l1, l2, l3), 1)
+        
         return {
             "key": key,
-            "feature": feature,  # (num_features, duration)
-            "label": torch.FloatTensor(label),  # (duration, num_classes)
+            "feature": feature,  # (batch_size, num_features, duration)
+            "label": torch.FloatTensor(label),  # (batch_size, duration // 2, num_classes)
         }
 
 
@@ -185,6 +211,18 @@ class SegTestDataset(Dataset):
             antialias=False,
         ).squeeze(0)
 
+        feature = torch.cat((feature, torch.flip(feature, [1])), 1) # !!!
+        
+        label = torch.FloatTensor(label)
+        l1 = label[:,0]
+        l2_tmp = label[:,1]
+        l3_tmp = label[:,2]
+
+        l1 = torch.cat((l1, torch.flip(l1, [0])), 0).view(-1, 1)
+        l2 = torch.cat((l2_tmp, torch.flip(l3_tmp, [0])), 0).view(-1, 1)
+        l3 = torch.cat((l3_tmp, torch.flip(l2_tmp, [0])), 0).view(-1, 1)
+        label = torch.cat((l1, l2, l3), 1)
+        
         return {
             "key": key,
             "feature": feature,  # (num_features, duration)
