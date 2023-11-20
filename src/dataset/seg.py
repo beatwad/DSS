@@ -98,18 +98,6 @@ class SegTrainDataset(Dataset):
         label[:, [1, 2]] = gaussian_label(
             label[:, [1, 2]], offset=self.cfg.dataset.offset, sigma=self.cfg.dataset.sigma
         )
-
-        feature = torch.cat((feature, torch.flip(feature, [1])), 1) # !!!
-        
-        label = torch.FloatTensor(label)
-        l1 = label[:,0]
-        l2_tmp = label[:,1]
-        l3_tmp = label[:,2]
-
-        l1 = torch.cat((l1, torch.flip(l1, [0])), 0).view(-1, 1)
-        l2 = torch.cat((l2_tmp, torch.flip(l3_tmp, [0])), 0).view(-1, 1)
-        l3 = torch.cat((l3_tmp, torch.flip(l2_tmp, [0])), 0).view(-1, 1)
-        label = torch.cat((l1, l2, l3), 1)
         
         return {
             "series_id": series_id,
@@ -165,18 +153,6 @@ class SegValidDataset(Dataset):
             end,
         )
         
-        feature = torch.cat((feature, torch.flip(feature, [1])), 1) # !!!
-        
-        label = torch.FloatTensor(label)
-        l1 = label[:,0]
-        l2_tmp = label[:,1]
-        l3_tmp = label[:,2]
-
-        l1 = torch.cat((l1, torch.flip(l1, [0])), 0).view(-1, 1)
-        l2 = torch.cat((l2_tmp, torch.flip(l3_tmp, [0])), 0).view(-1, 1)
-        l3 = torch.cat((l3_tmp, torch.flip(l2_tmp, [0])), 0).view(-1, 1)
-        label = torch.cat((l1, l2, l3), 1)
-        
         return {
             "key": key,
             "feature": feature,  # (batch_size, num_features, duration)
@@ -210,18 +186,6 @@ class SegTestDataset(Dataset):
             size=[self.num_features, self.upsampled_num_frames],
             antialias=False,
         ).squeeze(0)
-
-        feature = torch.cat((feature, torch.flip(feature, [1])), 1) # !!!
-        
-        label = torch.FloatTensor(label)
-        l1 = label[:,0]
-        l2_tmp = label[:,1]
-        l3_tmp = label[:,2]
-
-        l1 = torch.cat((l1, torch.flip(l1, [0])), 0).view(-1, 1)
-        l2 = torch.cat((l2_tmp, torch.flip(l3_tmp, [0])), 0).view(-1, 1)
-        l3 = torch.cat((l3_tmp, torch.flip(l2_tmp, [0])), 0).view(-1, 1)
-        label = torch.cat((l1, l2, l3), 1)
         
         return {
             "key": key,
