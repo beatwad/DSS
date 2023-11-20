@@ -126,7 +126,8 @@ class Spec2DCNN(BaseModel):
         preds = torch.cat((preds0, preds1, preds2), dim=2)
         # return labels back to original shape
         labels = output.labels
-        labels = labels[:, :labels.shape[1] // 2, :]
+        if labels is not None:
+            labels = labels[:, :labels.shape[1] // 2, :]
 
         preds = self._logits_to_proba_per_step(preds, org_duration)
         output.preds = preds

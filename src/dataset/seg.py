@@ -213,16 +213,6 @@ class SegTestDataset(Dataset):
 
         feature = torch.cat((feature, torch.flip(feature, [1])), 1) # !!!
         
-        label = torch.FloatTensor(label)
-        l1 = label[:,0]
-        l2_tmp = label[:,1]
-        l3_tmp = label[:,2]
-
-        l1 = torch.cat((l1, torch.flip(l1, [0])), 0).view(-1, 1)
-        l2 = torch.cat((l2_tmp, torch.flip(l3_tmp, [0])), 0).view(-1, 1)
-        l3 = torch.cat((l3_tmp, torch.flip(l2_tmp, [0])), 0).view(-1, 1)
-        label = torch.cat((l1, l2, l3), 1)
-        
         return {
             "key": key,
             "feature": feature,  # (num_features, duration)
