@@ -124,17 +124,14 @@ class Spec2DCNN(BaseModel):
         preds2 = torch.mean(torch.stack([preds2_0, preds1_1]), dim=0)
         # concat all preds together
         preds = torch.cat((preds0, preds1, preds2), dim=2)
+        preds = self._logits_to_proba_per_step(preds, org_duration)
+        output.preds = preds
         # return labels back to original shape
         labels = output.labels
         if labels is not None:
             labels = labels[:, :labels.shape[1] // 2, :]
-
-        preds = self._logits_to_proba_per_step(preds, org_duration)
-        output.preds = preds
-
-        labels = self._correct_labels(labels, org_duration)
-        output.labels = labels
-
+            labels = self._correct_labels(labels, org_duration)
+            output.labels = labels
         return output
     
     def _logits_to_proba_per_step(self, logits: torch.Tensor, org_duration: int) -> torch.Tensor:
