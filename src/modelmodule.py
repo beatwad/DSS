@@ -46,14 +46,14 @@ class PLSleepModel(LightningModule):
         self.cfg = cfg
         self.lr = self.cfg.optimizer.lr
         self.val_event_df = val_event_df
-        num_timesteps = nearest_valid_size(int(duration * cfg.upsample_rate), cfg.downsample_rate) * 2
+        num_timesteps = nearest_valid_size(int(duration * cfg.upsample_rate), cfg.downsample_rate)
         self.model = get_model(
             cfg,
             feature_dim=feature_dim,
             n_classes=num_classes,
             num_timesteps=num_timesteps // cfg.downsample_rate,
         )
-        self.duration = duration * 2
+        self.duration = duration
         self.validation_step_outputs: list = []
         self.__best_loss = np.inf
         self.__best_score = 0
@@ -83,8 +83,7 @@ class PLSleepModel(LightningModule):
         return output.loss
 
     def validation_step(self, batch, batch_idx):
-        output = self.model.predict(batch["feature"], self.duration // 2, batch["label"])
-        
+        output = self.model.predict(batch["feature"], self.duration, batch["label"])
         self.validation_step_outputs.append(
             (
                 batch["key"],
