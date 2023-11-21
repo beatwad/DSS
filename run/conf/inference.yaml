@@ -57,6 +57,3 @@ features:
   - "hour_sin"
   - "hour_cos"
   # - "sun_event"
-
-fold_miss:
-  - -1
