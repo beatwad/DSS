@@ -34,7 +34,6 @@ def get_weight_paths(cfg: InferenceConfig):
             weight_paths = glob.glob(weight_path)
         else:
             weight_paths = [glob.glob(weight_path)[0]]
-        # print(f'{cfg.dir.model_dir}/{cfg.weight["exp_name"]}/*.pth')
         return weight_paths
 
 
@@ -145,13 +144,13 @@ def main(cfg: InferenceConfig):
     keys, preds = None, None
     
     
-    # for i, model in enumerate(models):
-    for model in models:
+    for i, model in enumerate(models):
         with trace("inference"):
             tmp_keys, tmp_preds = inference(cfg.duration, test_dataloader, model, device, 
                                             use_amp=cfg.use_amp)
-            np.save(Path(cfg.dir.sub_dir) / f"keys_{i}.npy", tmp_keys) # !!!
-            np.save(Path(cfg.dir.sub_dir) / f"preds_{i}.npy", tmp_preds)
+            if cfg.dir == 'local':
+                np.save(Path(cfg.dir.sub_dir) / f"keys_{i}.npy", tmp_keys)
+                np.save(Path(cfg.dir.sub_dir) / f"preds_{i}.npy", tmp_preds)
             if keys is None:
                 keys = tmp_keys
                 preds = tmp_preds
@@ -160,7 +159,8 @@ def main(cfg: InferenceConfig):
 
     preds /= len(models)
     
-    np.save(Path(cfg.dir.sub_dir) / "preds.npy", preds) # !!!
+    if cfg.dir == 'local':
+        np.save(Path(cfg.dir.sub_dir) / "preds.npy", preds)
         
     with trace("make submission"):
         sub_df = make_submission(
