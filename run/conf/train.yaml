@@ -14,9 +14,9 @@ defaults:
   - dir: local
   - dataset: seg
   - model: Spec2DCNN
-  - feature_extractor: CNNSpectrogram
+  - feature_extractor: LSTMFeatureExtractor # CNNSpectrogram
   - decoder: TransformerDecoder
-  - split: fold_1
+  - split: fold_0
 
 seed: 42
 exp_name: dummy
