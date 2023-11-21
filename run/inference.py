@@ -160,13 +160,12 @@ def main(cfg: InferenceConfig):
 
     preds /= len(models)
     
-    
     # np.save(Path(cfg.dir.sub_dir) / "preds.npy", preds)
         
     with trace("make submission"):
         sub_df = make_submission(
             keys,
-            preds,
+            preds[:, [1, 2]],
             score_th=cfg.pp.score_th,
             distance=cfg.pp.distance,
         )
