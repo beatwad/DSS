@@ -1,3 +1,4 @@
+type: local
 data_dir: /home/alex/Kaggle/DSS/data/child-mind-institute-detect-sleep-states
 processed_dir: /home/alex/Kaggle/DSS/processed_data
 output_dir: /home/alex/Kaggle/DSS/output

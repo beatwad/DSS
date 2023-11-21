@@ -143,12 +143,11 @@ def main(cfg: InferenceConfig):
     
     keys, preds = None, None
     
-    
     for i, model in enumerate(models):
         with trace("inference"):
             tmp_keys, tmp_preds = inference(cfg.duration, test_dataloader, model, device, 
                                             use_amp=cfg.use_amp)
-            if cfg.dir == 'local':
+            if cfg.dir.type == 'local':
                 np.save(Path(cfg.dir.sub_dir) / f"keys_{i}.npy", tmp_keys)
                 np.save(Path(cfg.dir.sub_dir) / f"preds_{i}.npy", tmp_preds)
             if keys is None:
@@ -159,7 +158,7 @@ def main(cfg: InferenceConfig):
 
     preds /= len(models)
     
-    if cfg.dir == 'local':
+    if cfg.dir.type == 'local':
         np.save(Path(cfg.dir.sub_dir) / "preds.npy", preds)
         
     with trace("make submission"):
