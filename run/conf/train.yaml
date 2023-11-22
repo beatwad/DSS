@@ -14,8 +14,8 @@ defaults:
   - dir: local
   - dataset: seg
   - model: Spec2DCNN
-  - feature_extractor: LSTMFeatureExtractor # CNNSpectrogram
-  - decoder: TransformerDecoder
+  - feature_extractor: CNNSpectrogram
+  - decoder: MLPDecoder # TransformerDecoder
   - split: fold_0
 
 seed: 42
