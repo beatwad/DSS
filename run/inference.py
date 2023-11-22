@@ -126,7 +126,6 @@ def make_submission(
         score_th=score_th,
         distance=distance,  # type: ignore
     )
-
     return sub_df
 
 
