@@ -31,7 +31,6 @@ def post_process_for_seg(
         this_series_preds[mask, 0] += sleep_diffs[mask]
         mask = sleep_diffs < 0
         this_series_preds[mask, 1] -= sleep_diffs[mask]
-        this_series_preds = preds[series_idx].reshape(-1, 2)
 
         for i, event_name in enumerate(["onset", "wakeup"]):
             this_event_preds = this_series_preds[:, i]
