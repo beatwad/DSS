@@ -143,7 +143,7 @@ def main(cfg: InferenceConfig):
     
     keys, preds = None, None
     
-    for i, model in enumerate(models):
+    for model in models:
         with trace("inference"):
             tmp_keys, tmp_preds = inference(cfg.duration, test_dataloader, model, device, 
                                             use_amp=cfg.use_amp)
@@ -164,7 +164,7 @@ def main(cfg: InferenceConfig):
     with trace("make submission"):
         sub_df = make_submission(
             keys,
-            preds[:, [1, 2]],
+            preds, #[:, [1, 2]],
             score_th=cfg.pp.score_th,
             distance=cfg.pp.distance,
         )
