@@ -15,7 +15,7 @@ defaults:
   - dataset: seg
   - model: Spec2DCNN
   - feature_extractor: CNNSpectrogram
-  - decoder: MLPDecoder # TransformerDecoder
+  - decoder: TransformerDecoder
   - split: fold_0
 
 seed: 42

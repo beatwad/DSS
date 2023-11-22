@@ -23,7 +23,7 @@ def post_process_for_seg(
     for series_id in unique_series_ids:
         series_idx = np.where(series_ids == series_id)[0]
         # this_series_sleeps = preds[series_idx][:, :, [0, 0]]
-        this_series_preds = preds[series_idx][:, :, [1, 2]].reshape(-1, 2)
+        # this_series_preds = preds[series_idx][:, :, [1, 2]].reshape(-1, 2)
 
         # sleep_diffs = np.diff(this_series_sleeps[:, :, 0], prepend=1).flatten()
         # sleep_diffs = np.clip(sleep_diffs, -0.001, 0.0001)
@@ -31,6 +31,7 @@ def post_process_for_seg(
         # this_series_preds[mask, 0] += sleep_diffs[mask]
         # mask = sleep_diffs < 0  # & (sleep_diffs > -0.001)
         # this_series_preds[mask, 1] -= sleep_diffs[mask]
+        this_series_preds = preds[series_idx].reshape(-1, 2)
 
         for i, event_name in enumerate(["onset", "wakeup"]):
             this_event_preds = this_series_preds[:, i]

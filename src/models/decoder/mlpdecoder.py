@@ -6,9 +6,9 @@ import torch.nn.functional as F
 class MLPDecoder(nn.Module):
     def __init__(self, 
         n_channels: int,
+        n_classes: int,
         hidden_size: int,
         num_layers: int,
-        n_classes: int
     ):
         super(MLPDecoder, self).__init__()
         
@@ -25,7 +25,7 @@ class MLPDecoder(nn.Module):
             else:
                 self.mlp.append(nn.Linear(hidden_size, hidden_size))
                 self.mlp.append(nn.GELU())
-        self.mlp = nn.ModuleList(*self.mlp)
+        self.mlp = nn.ModuleList(self.mlp)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass of the model.
