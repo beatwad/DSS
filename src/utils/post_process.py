@@ -26,7 +26,7 @@ def post_process_for_seg(
         this_series_preds = preds[series_idx][:, :, [1, 2]].reshape(-1, 2)
 
         sleep_diffs = np.diff(this_series_sleeps[:, :, 0], prepend=1).flatten()
-        sleep_diffs = np.clip(sleep_diffs, -0.001, 0.0001)
+        sleep_diffs = np.clip(sleep_diffs, -0.001, 0.001)
         mask = sleep_diffs > 0
         this_series_preds[mask, 0] += sleep_diffs[mask]
         mask = sleep_diffs < 0
