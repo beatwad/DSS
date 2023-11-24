@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 from typing import Optional
 
 import numpy as np
@@ -58,6 +60,9 @@ class PLSleepModel(LightningModule):
         self.__best_loss = np.inf
         self.__best_score = 0
 
+        with open (Path(cfg.dir.processed_dir) / 'train' / 'series_lens.json') as f:
+            self.series_lens = json.load(f)
+
     def forward(
         self,
         x: torch.Tensor,
@@ -114,6 +119,7 @@ class PLSleepModel(LightningModule):
         val_pred_df = post_process_for_seg(
             keys=keys,
             preds=preds,
+            series_lens=self.series_lens,
             score_th=self.cfg.pp.score_th,
             distance=self.cfg.pp.distance,
             offset=self.cfg.pp.offset,
