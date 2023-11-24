@@ -118,13 +118,14 @@ def inference(
 
 
 def make_submission(
-    keys: list[str], preds: np.ndarray, score_th, distance
+    keys: list[str], preds: np.ndarray, score_th, distance, offset
 ) -> pl.DataFrame:
     sub_df = post_process_for_seg(
         keys,
         preds,  # type: ignore
         score_th=score_th,
         distance=distance,  # type: ignore
+        offset=offset
     )
 
     return sub_df
@@ -167,6 +168,7 @@ def main(cfg: InferenceConfig):
             preds, #[:, [1, 2]],
             score_th=cfg.pp.score_th,
             distance=cfg.pp.distance,
+            offset=cfg.pp.offset
         )
     sub_df.write_csv(Path(cfg.dir.sub_dir) / "submission.csv")
 

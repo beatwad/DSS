@@ -4,8 +4,8 @@ from scipy.signal import find_peaks
 
 
 def post_process_for_seg(
-    keys: list[str], preds: np.ndarray, score_th: float = 0.01, distance: int = 5000
-) -> pl.DataFrame:
+    keys: list[str], preds: np.ndarray, score_th: float = 0.01, distance: int = 5000, 
+    offset: int = 0) -> pl.DataFrame:
     """make submission dataframe for segmentation task
 
     Args:
@@ -22,31 +22,51 @@ def post_process_for_seg(
     records = []
     for series_id in unique_series_ids:
         series_idx = np.where(series_ids == series_id)[0]
-        # this_series_sleeps = preds[series_idx][:, :, [0, 0]]
-        # this_series_preds = preds[series_idx][:, :, [1, 2]].reshape(-1, 2)
-
-        # sleep_diffs = np.diff(this_series_sleeps[:, :, 0], prepend=1).flatten()
-        # sleep_diffs = np.clip(sleep_diffs, -0.001, 0.0001)
-        # mask = sleep_diffs > 0  # & (sleep_diffs < 0.0001)
-        # this_series_preds[mask, 0] += sleep_diffs[mask]
-        # mask = sleep_diffs < 0  # & (sleep_diffs > -0.001)
-        # this_series_preds[mask, 1] -= sleep_diffs[mask]
         this_series_preds = preds[series_idx].reshape(-1, 2)
 
-        for i, event_name in enumerate(["onset", "wakeup"]):
-            this_event_preds = this_series_preds[:, i]
-            steps = find_peaks(this_event_preds, height=score_th, distance=distance)[0]
-            scores = this_event_preds[steps]
+        onset_event_preds = this_series_preds[:, 0]
+        onset_steps = find_peaks(onset_event_preds, height=score_th, distance=distance)[0]
+        onset_scores = onset_event_preds[onset_steps]
+        min_onset_step = min(onset_steps)
 
-            for step, score in zip(steps, scores):
-                records.append(
-                    {
-                        "series_id": series_id,
-                        "step": step,
-                        "event": event_name,
-                        "score": score,
-                    }
-                )
+        wakeup_event_preds = this_series_preds[:, 1]
+        wakeup_steps = find_peaks(wakeup_event_preds, height=score_th, distance=distance)[0]
+        wakeup_scores = wakeup_event_preds[wakeup_steps]
+        max_wakeup_step = max(wakeup_steps)
+
+        for step, score in zip(onset_steps, onset_scores):
+            # select only wakeups than has at least one onset before
+            if (step >= max_wakeup_step 
+                or step <= 720 
+                or step >= len(this_series_preds) - 720 * offset
+                ):
+                continue
+
+            records.append(
+                {
+                    "series_id": series_id,
+                    "step": step,
+                    "event": "onset",
+                    "score": score,
+                }
+            )
+
+        for step, score in zip(wakeup_steps, wakeup_scores):
+            # select only onsets than has at least one wakeup after
+            if (step <= min_onset_step 
+                or step <= 720 * offset 
+                or step >= len(this_series_preds) - 720
+                ):
+                continue
+
+            records.append(
+                {
+                    "series_id": series_id,
+                    "step": step,
+                    "event": "wakeup",
+                    "score": score,
+                }
+            )
 
     if len(records) == 0:  # If there is no prediction, insert dummy
         records.append(
@@ -61,8 +81,5 @@ def post_process_for_seg(
     sub_df = pl.DataFrame(records).sort(by=["series_id", "step"])
     row_ids = pl.Series(name="row_id", values=np.arange(len(sub_df)))
     sub_df = sub_df.with_columns(row_ids).select(["row_id", "series_id", "step", "event", "score"])
-    # sub_df = sub_df.with_columns(
-    #     pl.when(pl.col("score") < 0).then(0).otherwise(pl.col("score")).alias("score"))
-    # sub_df = sub_df.with_columns(
-    #     pl.when(pl.col("score") > 1).then(1).otherwise(pl.col("score")).alias("score"))
+
     return sub_df

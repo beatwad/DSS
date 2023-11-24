@@ -14,7 +14,7 @@ defaults:
   - dir: local
   - dataset: seg
   - model: Spec2DCNN
-  - feature_extractor: CNNSpectrogram
+  - feature_extractor: LSTMFeatureExtractor # CNNSpectrogram
   - decoder: TransformerDecoder
   - split: fold_0
 
@@ -48,6 +48,7 @@ aug:
 pp:
   score_th: 0.0001
   distance: 90
+  offset: 8
 
 # label
 labels:
@@ -75,7 +76,7 @@ features:
 # optimizer
 optimizer:
   lr: 5e-4
-  weight_decay: 1e-2
+  weight_decay: 5e-2
 
 # scheduler
 scheduler:
