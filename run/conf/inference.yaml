@@ -58,3 +58,7 @@ features:
   - "hour_sin"
   - "hour_cos"
   # - "sun_event"
+  # - "anglez_shift_24p"
+  # - "anglez_shift_24n"
+  # - "enmo_shift_24p"
+  # - "enmo_shift_24n"
