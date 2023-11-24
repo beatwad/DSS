@@ -28,12 +28,16 @@ FEATURE_NAMES = [
     "step",
     "hour_sin",
     "hour_cos",
-    "month_sin",
-    "month_cos",
-    "minute_sin",
-    "minute_cos",
-    "anglez_sin",
-    "anglez_cos",
+    # "month_sin",
+    # "month_cos",
+    # "minute_sin",
+    # "minute_cos",
+    # "anglez_sin",
+    # "anglez_cos",
+    "anglez_shift_24p",
+    "anglez_shift_24n",
+    "enmo_shift_24p",
+    "enmo_shift_24n",
 ]
 
 ANGLEZ_MEAN = -8.810476
@@ -92,9 +96,9 @@ def add_feature(series_df: pl.DataFrame) -> pl.DataFrame:
             *to_coord(pl.col("timestamp").dt.hour(), 24, "hour"),
             *to_coord(pl.col("timestamp").dt.month(), 12, "month"),
             *to_coord(pl.col("timestamp").dt.minute(), 60, "minute"),
-            pl.col("step") / pl.count("step"),
-            pl.col('anglez_rad').sin().alias('anglez_sin'),
-            pl.col('anglez_rad').cos().alias('anglez_cos'),
+            # pl.col("step") / pl.count("step"),
+            # pl.col('anglez_rad').sin().alias('anglez_sin'),
+            # pl.col('anglez_rad').cos().alias('anglez_cos'),
         )
         .select("series_id", *FEATURE_NAMES)
     )
@@ -137,9 +141,13 @@ def main(cfg: PrepareDataConfig):
         series_df = (
             series_lf.with_columns(
                 pl.col("timestamp").str.to_datetime("%Y-%m-%dT%H:%M:%S%z"),
-                deg_to_rad(pl.col("anglez")).alias("anglez_rad"),
+                # deg_to_rad(pl.col("anglez")).alias("anglez_rad"),
                 (pl.col("anglez") - ANGLEZ_MEAN) / ANGLEZ_STD,
                 (pl.col("enmo") - ENMO_MEAN) / ENMO_STD,
+                ((pl.col("anglez") - ANGLEZ_MEAN) / ANGLEZ_STD).shift(17480).alias("anglez_shift_24p"),
+                ((pl.col("anglez") - ANGLEZ_MEAN) / ANGLEZ_STD).shift(-17480).alias("anglez_shift_24n"),
+                ((pl.col("enmo") - ENMO_MEAN) / ENMO_STD).shift(17480).alias("enmo_shift_24p"),
+                ((pl.col("enmo") - ENMO_MEAN) / ENMO_STD).shift(-17480).alias("enmo_shift_24n"),
             )
             .select(
                 [
@@ -147,12 +155,21 @@ def main(cfg: PrepareDataConfig):
                     pl.col("anglez"),
                     pl.col("enmo"),
                     pl.col("timestamp"),
-                    pl.col("anglez_rad"),
+                    pl.col("anglez_shift_24p"),
+                    pl.col("anglez_shift_24n"),
+                    pl.col("enmo_shift_24p"),
+                    pl.col("enmo_shift_24n"),
+                    # pl.col("anglez_rad"),
                 ]
             )
             .collect(streaming=True)
             .sort(by=["series_id", "timestamp"])
         )
+        series_df = series_df.with_columns(pl.col('anglez_shift_24p').fill_null(0))
+        series_df = series_df.with_columns(pl.col('anglez_shift_24n').fill_null(0))
+        series_df = series_df.with_columns(pl.col('enmo_shift_24p').fill_null(0))
+        series_df = series_df.with_columns(pl.col('enmo_shift_24n').fill_null(0))
+        
         n_unique = series_df.get_column("series_id").n_unique()
     with trace("Save features"):
         series_lens = dict()

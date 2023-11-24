@@ -47,7 +47,7 @@ aug:
 # post_process
 pp:
   score_th: 0.0001
-  distance: 90
+  distance: 70
   offset: 8
 
 # label
@@ -72,11 +72,15 @@ features:
   # - "week_cos"
   # - "anglez_sin"
   # - "anglez_cos"
+  - "anglez_shift_24p"
+  - "anglez_shift_24n"
+  - "enmo_shift_24p"
+  - "enmo_shift_24n"
 
 # optimizer
 optimizer:
   lr: 5e-4
-  weight_decay: 5e-2
+  weight_decay: 1e-2
 
 # scheduler
 scheduler:

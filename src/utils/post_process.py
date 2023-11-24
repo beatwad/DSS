@@ -41,10 +41,9 @@ def post_process_for_seg(
         wakeup_scores = wakeup_event_preds[wakeup_steps]
         max_wakeup_step = max(wakeup_steps) if len(wakeup_steps) > 0 else 0
 
-        # print(series_id, max_step, len(this_series_preds))
-
         for step, score in zip(onset_steps, onset_scores):
-            # select only wakeups than has at least one onset before
+            # select only wakeups than has at least one onset before 
+            # and not too close to series borders
             if step >= max_wakeup_step or step <= 720 or step >= max_step - 720 * offset:
                 continue
 
@@ -59,6 +58,7 @@ def post_process_for_seg(
 
         for step, score in zip(wakeup_steps, wakeup_scores):
             # select only onsets than has at least one wakeup after
+            # and not too close to series borders
             if step <= min_onset_step or step <= 720 * offset or step >= max_step - 180:
                 continue
 
