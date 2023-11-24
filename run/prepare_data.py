@@ -1,15 +1,14 @@
+import json
 import shutil
 from pathlib import Path
 
 import hydra
 import numpy as np
 import polars as pl
-
 from astral.geocoder import database, lookup
 from astral.location import Location
 from astral.sun import sun
 from omegaconf import DictConfig
-
 from tqdm import tqdm
 
 from src.conf import PrepareDataConfig
@@ -156,15 +155,21 @@ def main(cfg: PrepareDataConfig):
         )
         n_unique = series_df.get_column("series_id").n_unique()
     with trace("Save features"):
+        series_lens = dict()
+        
         for series_id, this_series_df in tqdm(series_df.group_by("series_id"), total=n_unique):
             # add features
-            this_series_df = get_sun_events(this_series_df)
+            # this_series_df = get_sun_events(this_series_df)
             this_series_df = add_feature(this_series_df)
 
             # save each feature in .npy
             series_dir = processed_dir / series_id  # type: ignore
             save_each_series(this_series_df, FEATURE_NAMES, series_dir)
 
+            series_lens[series_id] = len(this_series_df)
+
+        with open(processed_dir / "series_lens.json", 'w') as f:
+            json.dump(series_lens, f)
 
 if __name__ == "__main__":
-    main()
+    main()  

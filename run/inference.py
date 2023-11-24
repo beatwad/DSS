@@ -1,4 +1,5 @@
 import glob
+import json
 from pathlib import Path
 
 import hydra
@@ -118,16 +119,16 @@ def inference(
 
 
 def make_submission(
-    keys: list[str], preds: np.ndarray, score_th, distance, offset
+    keys: list[str], preds: np.ndarray, series_lens: np.ndarray, score_th, distance, offset
 ) -> pl.DataFrame:
     sub_df = post_process_for_seg(
         keys,
         preds,  # type: ignore
+        series_lens,
         score_th=score_th,
         distance=distance,  # type: ignore
         offset=offset
     )
-
     return sub_df
 
 
@@ -148,9 +149,6 @@ def main(cfg: InferenceConfig):
         with trace("inference"):
             tmp_keys, tmp_preds = inference(cfg.duration, test_dataloader, model, device, 
                                             use_amp=cfg.use_amp)
-            # if cfg.dir.type == 'local':
-            #     np.save(Path(cfg.dir.sub_dir) / f"keys_{i}.npy", tmp_keys)
-            #     np.save(Path(cfg.dir.sub_dir) / f"preds_{i}.npy", tmp_preds)
             if keys is None:
                 keys = tmp_keys
                 preds = tmp_preds
@@ -159,13 +157,17 @@ def main(cfg: InferenceConfig):
 
     preds /= len(models)
     
-    # if cfg.dir.type == 'local':
-    #     np.save(Path(cfg.dir.sub_dir) / "preds.npy", preds)
+    np.save(Path(cfg.dir.sub_dir) / "keys.npy", keys)
+    np.save(Path(cfg.dir.sub_dir) / "preds.npy", preds)
         
+    with open (Path(cfg.dir.processed_dir) / cfg.phase / 'series_lens.json') as f:
+        series_lens = json.load(f)
+    
     with trace("make submission"):
         sub_df = make_submission(
             keys,
-            preds, #[:, [1, 2]],
+            preds,
+            series_lens,
             score_th=cfg.pp.score_th,
             distance=cfg.pp.distance,
             offset=cfg.pp.offset

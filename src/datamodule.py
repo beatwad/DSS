@@ -26,6 +26,9 @@ def load_features(
         series_ids = [series_dir.name for series_dir in (processed_dir / phase).glob("*")]
 
     for series_id in series_ids:
+        if series_id.endswith('.json'):
+            continue
+        
         series_dir = processed_dir / phase / series_id
         this_feature = []
         for feature_name in feature_names:
@@ -48,6 +51,9 @@ def load_chunk_features(
         series_ids = [series_dir.name for series_dir in (processed_dir / phase).glob("*")]
 
     for series_id in series_ids:
+        if series_id.endswith('.json'):
+            continue
+        
         series_dir = processed_dir / phase / series_id
         this_feature = []
         for feature_name in feature_names:

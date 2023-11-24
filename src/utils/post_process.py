@@ -4,8 +4,13 @@ from scipy.signal import find_peaks
 
 
 def post_process_for_seg(
-    keys: list[str], preds: np.ndarray, score_th: float = 0.01, distance: int = 5000, 
-    offset: int = 0) -> pl.DataFrame:
+    keys: list[str],
+    preds: np.ndarray,
+    series_lens: dict,
+    score_th: float = 0.01,
+    distance: int = 5000,
+    offset: int = 0,
+) -> pl.DataFrame:
     """make submission dataframe for segmentation task
 
     Args:
@@ -21,6 +26,8 @@ def post_process_for_seg(
 
     records = []
     for series_id in unique_series_ids:
+        max_step = series_lens[series_id]
+
         series_idx = np.where(series_ids == series_id)[0]
         this_series_preds = preds[series_idx].reshape(-1, 2)
 
@@ -33,13 +40,12 @@ def post_process_for_seg(
         wakeup_steps = find_peaks(wakeup_event_preds, height=score_th, distance=distance)[0]
         wakeup_scores = wakeup_event_preds[wakeup_steps]
         max_wakeup_step = max(wakeup_steps) if len(wakeup_steps) > 0 else 0
-  
+
+        # print(series_id, max_step, len(this_series_preds))
+
         for step, score in zip(onset_steps, onset_scores):
             # select only wakeups than has at least one onset before
-            if (step >= max_wakeup_step 
-                or step <= 720 
-                or step >= len(this_series_preds) - 720 * offset
-                ):
+            if step >= max_wakeup_step or step <= 720 or step >= max_step - 720 * offset:
                 continue
 
             records.append(
@@ -53,10 +59,7 @@ def post_process_for_seg(
 
         for step, score in zip(wakeup_steps, wakeup_scores):
             # select only onsets than has at least one wakeup after
-            if (step <= min_onset_step 
-                or step <= 720 * offset 
-                or step >= len(this_series_preds) - 720
-                ):
+            if step <= min_onset_step or step <= 720 * offset or step >= max_step - 180:
                 continue
 
             records.append(
