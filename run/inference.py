@@ -157,8 +157,8 @@ def main(cfg: InferenceConfig):
 
     preds /= len(models)
     
-    np.save(Path(cfg.dir.sub_dir) / "keys.npy", keys)
-    np.save(Path(cfg.dir.sub_dir) / "preds.npy", preds)
+    # np.save(Path(cfg.dir.sub_dir) / "keys.npy", keys)
+    # np.save(Path(cfg.dir.sub_dir) / "preds.npy", preds)
         
     with open (Path(cfg.dir.processed_dir) / cfg.phase / 'series_lens.json') as f:
         series_lens = json.load(f)
