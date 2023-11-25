@@ -66,18 +66,26 @@ def negative_sampling(this_event_df: pd.DataFrame, num_steps: int,
         int: negative sample position
     """
     # onsetとwakupを除いた範囲からランダムにサンプリング
-    positive_positions = set(this_event_df[["onset", "wakeup"]].to_numpy().flatten().tolist())
-    negative_positions = list(set(range(num_steps)) - positive_positions)
-    negative_positions = [n for n in negative_positions if n < max_step]
-    res = list()
-    # negative position must not be too close to positive position
-    for n in negative_positions:
-        for p in positive_positions:
-            if p - duration // 2 <= n <= p + duration // 2:
-                break
-        else:
-            res.append(n)
-    pos = random.sample(res, 1)[0]
+    positive_positions = list(set(this_event_df[["onset", "wakeup"]].to_numpy().flatten().tolist()))
+    # negative_positions = np.zeros(num_steps)
+    
+    # # negative position must not be too close to positive position
+    # for p in positive_positions:
+    #     negative_positions[max(p - duration // 2, 0) : min(p + duration // 2, num_steps)] = 1
+
+    # negative_positions = list(np.where(negative_positions == 0)[0])
+
+    # # if can't find far enough negative samples - just select any
+    # if len(negative_positions) == 0:
+    negative_positions = np.zeros(num_steps)
+    negative_positions[positive_positions] = 1
+    negative_positions = list(np.where(negative_positions == 0)[0])
+    
+    # do not consider negative samples from the end of the strange series
+    # negative_positions = [n for n in negative_positions if n < max_step]
+
+    pos = random.sample(negative_positions, 1)[0]
+
     return pos
 
 

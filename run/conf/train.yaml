@@ -24,7 +24,7 @@ duration: 8640 # duration is a multiple of 32, duration * 5 = number of seconds
 downsample_rate: 2
 upsample_rate: 1
 batch_size: 16
-num_workers: 1
+num_workers: 12
 
 trainer:
   epoch: 50
