@@ -180,7 +180,7 @@ def main(cfg: PrepareDataConfig):
         for series_id, this_series_df in tqdm(series_df.group_by("series_id"), total=n_unique):
             # add features
             # this_series_df = get_sun_events(this_series_df)
-            this_series_df = add_shift_events(this_series_df)
+            # this_series_df = add_shift_events(this_series_df)
             this_series_df = add_feature(this_series_df)
             
             # save each feature in .npy

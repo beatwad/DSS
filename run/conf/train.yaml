@@ -23,8 +23,8 @@ exp_name: dummy
 duration: 8640 # duration is a multiple of 32, duration * 5 = number of seconds
 downsample_rate: 2
 upsample_rate: 1
-batch_size: 8
-num_workers: 12
+batch_size: 16
+num_workers: 1
 
 trainer:
   epoch: 50
@@ -32,7 +32,7 @@ trainer:
   use_amp: true
   debug: false
   gradient_clip_val: 1.0
-  accumulate_grad_batches: 4
+  accumulate_grad_batches: 2
   monitor: val_loss
   monitor_mode: min
   check_val_every_n_epoch: 1
@@ -72,10 +72,10 @@ features:
   # - "week_cos"
   # - "anglez_sin"
   # - "anglez_cos"
-  - "anglez_shift_24p"
-  - "anglez_shift_24n"
-  - "enmo_shift_24p"
-  - "enmo_shift_24n"
+  # - "anglez_shift_24p"
+  # - "anglez_shift_24n"
+  # - "enmo_shift_24p"
+  # - "enmo_shift_24n"
 
 # optimizer
 optimizer:

@@ -54,7 +54,8 @@ def random_crop(pos: int, duration: int, max_end) -> tuple[int, int]:
     return start, end
 
 
-def negative_sampling(this_event_df: pd.DataFrame, num_steps: int) -> int:
+def negative_sampling(this_event_df: pd.DataFrame, num_steps: int, 
+                      max_step: int, duration: int) -> int:
     """negative sampling
 
     Args:
@@ -67,7 +68,17 @@ def negative_sampling(this_event_df: pd.DataFrame, num_steps: int) -> int:
     # onsetとwakupを除いた範囲からランダムにサンプリング
     positive_positions = set(this_event_df[["onset", "wakeup"]].to_numpy().flatten().tolist())
     negative_positions = list(set(range(num_steps)) - positive_positions)
-    return random.sample(negative_positions, 1)[0]
+    negative_positions = [n for n in negative_positions if n < max_step]
+    res = list()
+    # negative position must not be too close to positive position
+    for n in negative_positions:
+        for p in positive_positions:
+            if p - duration // 2 <= n <= p + duration // 2:
+                break
+        else:
+            res.append(n)
+    pos = random.sample(res, 1)[0]
+    return pos
 
 
 # ref: https://www.kaggle.com/competitions/dfl-bundesliga-data-shootout/discussion/360236#2004730

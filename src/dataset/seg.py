@@ -56,6 +56,10 @@ class SegTrainDataset(Dataset):
         self.upsampled_num_frames = nearest_valid_size(
             int(self.cfg.duration * self.cfg.upsample_rate), self.cfg.downsample_rate
         )
+        self.max_steps = {'05e1944c3818': 139992, '13b4d6a01d27': 92484, 
+                          '7476c0bd18d2': 83988, '5aad18e7ce64': 18216,
+                          'aed3850f65f0': 21228, 'c5365a55ebb7': 17772, 
+                          'f981a0805fd0': 75192}
 
     def __len__(self):
         return len(self.event_df)
@@ -72,7 +76,8 @@ class SegTrainDataset(Dataset):
 
         # sample background
         if random.random() < self.cfg.dataset.bg_sampling_rate:
-            pos = negative_sampling(this_event_df, n_steps)
+            max_step = self.max_steps[series_id] if series_id in self.max_steps else 1e9
+            pos = negative_sampling(this_event_df, n_steps, max_step, self.cfg.duration)
 
         # crop
         if n_steps > self.cfg.duration:
