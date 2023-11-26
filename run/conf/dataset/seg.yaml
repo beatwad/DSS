@@ -3,4 +3,4 @@ batch_size: ${batch_size}
 num_workers: ${num_workers}
 offset: 20
 sigma: 12
-bg_sampling_rate: 0.4
+bg_sampling_rate: 0.5
