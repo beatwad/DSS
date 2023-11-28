@@ -251,8 +251,8 @@ def post_process_for_seg(
     sub_df["row_id"] = np.arange(len(sub_df))
 
     # delete onset and wakeup events that are too far from the same events with high score
-    high_score_event_threshold = 17280 * 1.01 # 24 hours
-    sub_df = clean_weak_events(sub_df, high_score_event_threshold)
+    # high_score_event_threshold = 17280 * 1.01 # 24 hours
+    # sub_df = clean_weak_events(sub_df, high_score_event_threshold)
     
     # # delete onset and wakeup events that are too far from next wakeup / previous onset event
     # event_threshold = 14400 # 20 hours
