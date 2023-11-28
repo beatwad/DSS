@@ -21,7 +21,6 @@ from src.utils.post_process import post_process_for_seg
 
 def get_weight_paths(cfg: InferenceConfig):
     # load weights
-    print(cfg.weight["exp_name"])
     if cfg.weight is not None:
         if cfg.best_model == 'ensemble':
             weight_path = f'{cfg.dir.model_dir}/{cfg.weight["exp_name"]}/*.pth'
@@ -31,7 +30,6 @@ def get_weight_paths(cfg: InferenceConfig):
             weight_path = f'{cfg.dir.model_dir}/{cfg.weight["exp_name"]}/*_score.pth'
         else:
             weight_path = f'{cfg.dir.model_dir}/{cfg.weight["exp_name"]}/*_epoch.pth'
-        print(weight_path)
         if cfg.best_model == 'ensemble':
             weight_paths = glob.glob(weight_path)
             weight_paths.sort()
@@ -138,7 +136,7 @@ def make_submission(
 
 @hydra.main(config_path="conf", config_name="inference", version_base="1.2")
 def main(cfg: InferenceConfig):
-    
+
     seed_everything(cfg.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -173,7 +171,7 @@ def main(cfg: InferenceConfig):
     if cfg.dir.output_dir == '/home/alex/Kaggle/DSS/output':
         np.save(Path(cfg.dir.sub_dir) / "keys.npy", keys)
         np.save(Path(cfg.dir.sub_dir) / "preds.npy", preds)
-        
+ 
     with open (Path(cfg.dir.processed_dir) / cfg.phase / 'series_lens.json') as f:
         series_lens = json.load(f)
     
@@ -186,7 +184,7 @@ def main(cfg: InferenceConfig):
             distance=cfg.pp.distance,
             offset=cfg.pp.offset
         )
-    sub_df.to_csv(Path(cfg.dir.sub_dir) / "submission.csv")
+    sub_df.to_csv(Path(cfg.dir.sub_dir) / "submission.csv", index=False)
 
 
 if __name__ == "__main__":
