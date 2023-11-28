@@ -152,9 +152,9 @@ def main(cfg: InferenceConfig):
     # - 5_0 fold: 0.735, 5_1 fold: 0.72, 5_2 fold: 0.72, 5_3 fold: 0.735, 5_4 fold: 0.703
     # - 10_2 fold: 0.729, 10_4 fold: 0.734, 10_6 fold: 0.733, 10_7 fold: 0.729, 10_9 fold: 0.722
 
-    # weight_list: [5_0, 10_4, 10_6, 5_3] # 10_2, 10_7
+    # weight_list: [5_0, 10_2, 10_4, 10_6, 10_7, 5_3]
     # weights_ranks: [1, 2, 4, 3] # 6, 5
-    # weights = [1.15, 1.1, 1, 1.05] # 0.9, 0.95
+    weights = [1.1, 0.8, 1.1, 1.1, 0.8, 1.1] # 0.9, 0.95
     
     for i, model in enumerate(models):
         with trace("inference"):
@@ -162,11 +162,11 @@ def main(cfg: InferenceConfig):
                                             use_amp=cfg.use_amp)
             if keys is None:
                 keys = tmp_keys
-                preds = tmp_preds # * weights[i]
+                preds = tmp_preds * weights[i]
             else:
-                preds += tmp_preds # * weights[i]
+                preds += tmp_preds * weights[i]
 
-    preds /= len(models) # sum(weights)
+    preds /= sum(weights)
     
     if cfg.dir.output_dir == '/home/alex/Kaggle/DSS/output':
         np.save(Path(cfg.dir.sub_dir) / "keys.npy", keys)

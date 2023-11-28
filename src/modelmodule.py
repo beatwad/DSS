@@ -124,14 +124,14 @@ class PLSleepModel(LightningModule):
             distance=self.cfg.pp.distance,
             offset=self.cfg.pp.offset,
         )
-        score = event_detection_ap(self.val_event_df.to_pandas(), val_pred_df.to_pandas())
+        score = event_detection_ap(self.val_event_df.to_pandas(), val_pred_df)
         self.log("val_score", score, on_step=False, on_epoch=True, logger=True, prog_bar=True)
 
         if score > self.__best_score:
             np.save("keys.npy", np.array(keys))
             np.save("labels_score.npy", labels)
             np.save("preds_score.npy", preds)
-            val_pred_df.write_csv("val_pred_score_df.csv")
+            val_pred_df.to_csv("val_pred_score_df.csv", index=False)
             torch.save(self.model.state_dict(), f"best_model_score.pth")
             print(f"Save best score model {self.__best_score} -> {score}, epoch {self.current_epoch}")
             self.__best_score = score
@@ -139,14 +139,14 @@ class PLSleepModel(LightningModule):
             np.save("keys.npy", np.array(keys))
             np.save("labels_loss.npy", labels)
             np.save("preds_loss.npy", preds)
-            val_pred_df.write_csv("val_pred_loss_df.csv")
+            val_pred_df.to_csv("val_pred_loss_df.csv", index=False)
             torch.save(self.model.state_dict(), f"best_model_loss.pth")
             print(f"Save best loss model {self.__best_loss} -> {loss}, epoch {self.current_epoch}")
         if (self.current_epoch > 40 or self.cfg.weight.load) and self.current_epoch % 4 == 0:
             np.save("keys.npy", np.array(keys))
             np.save(f"labels_{self.current_epoch}_epoch.npy", labels)
             np.save(f"preds_loss_{self.current_epoch}_epoch.npy", preds)
-            val_pred_df.write_csv(f"val_pred_df_{self.current_epoch}_epoch.csv")
+            val_pred_df.to_csv(f"val_pred_df_{self.current_epoch}_epoch.csv", index=False)
             torch.save(self.model.state_dict(), f"model_{self.current_epoch}_epoch.pth")
             print(f"Save model, epoch {self.current_epoch}")
         
