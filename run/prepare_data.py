@@ -34,10 +34,10 @@ FEATURE_NAMES = [
     # "minute_cos",
     # "anglez_sin",
     # "anglez_cos",
-    "anglez_shift_24p",
-    "anglez_shift_24n",
-    "enmo_shift_24p",
-    "enmo_shift_24n",
+    # "anglez_shift_24p",
+    # "anglez_shift_24n",
+    # "enmo_shift_24p",
+    # "enmo_shift_24n",
 ]
 
 ANGLEZ_MEAN = -8.810476
