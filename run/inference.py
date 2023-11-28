@@ -4,7 +4,7 @@ from pathlib import Path
 
 import hydra
 import numpy as np
-import polars as pl
+import pandas as pd
 import torch
 from pytorch_lightning import seed_everything
 from torch.utils.data import DataLoader
@@ -124,7 +124,7 @@ def inference(
 
 def make_submission(
     keys: list[str], preds: np.ndarray, series_lens: np.ndarray, score_th, distance, offset
-) -> pl.DataFrame:
+) -> pd.DataFrame:
     sub_df = post_process_for_seg(
         keys,
         preds,  # type: ignore
@@ -138,6 +138,7 @@ def make_submission(
 
 @hydra.main(config_path="conf", config_name="inference", version_base="1.2")
 def main(cfg: InferenceConfig):
+    
     seed_everything(cfg.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -169,8 +170,9 @@ def main(cfg: InferenceConfig):
 
     preds /= len(models) # sum(weights)
     
-    # np.save(Path(cfg.dir.sub_dir) / "keys.npy", keys)
-    # np.save(Path(cfg.dir.sub_dir) / "preds.npy", preds)
+    if cfg.dir.output_dir == '/home/alex/Kaggle/DSS/output':
+        np.save(Path(cfg.dir.sub_dir) / "keys.npy", keys)
+        np.save(Path(cfg.dir.sub_dir) / "preds.npy", preds)
         
     with open (Path(cfg.dir.processed_dir) / cfg.phase / 'series_lens.json') as f:
         series_lens = json.load(f)
@@ -184,7 +186,7 @@ def main(cfg: InferenceConfig):
             distance=cfg.pp.distance,
             offset=cfg.pp.offset
         )
-    sub_df.write_csv(Path(cfg.dir.sub_dir) / "submission.csv")
+    sub_df.to_csv(Path(cfg.dir.sub_dir) / "submission.csv")
 
 
 if __name__ == "__main__":
