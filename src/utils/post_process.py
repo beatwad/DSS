@@ -195,17 +195,16 @@ def post_process_for_seg(
 
         series_idx = np.where(series_ids == series_id)[0]
         this_series_preds = preds[series_idx].reshape(-1, 2)
-        # this_series_preds = this_series_preds[:max_step]
 
         onset_event_preds = this_series_preds[:, 0]
         onset_steps = find_peaks(onset_event_preds, height=score_th, distance=distance)[0]
         onset_scores = onset_event_preds[onset_steps]
-        min_onset_step = np.min(onset_steps) if len(onset_steps) > 0 else 0
+        min_onset_step = min(onset_steps) if len(onset_steps) > 0 else 0
 
         wakeup_event_preds = this_series_preds[:, 1]
         wakeup_steps = find_peaks(wakeup_event_preds, height=score_th, distance=distance)[0]
         wakeup_scores = wakeup_event_preds[wakeup_steps]
-        max_wakeup_step = np.max(wakeup_steps) if len(wakeup_steps) > 0 else 0
+        max_wakeup_step = max(wakeup_steps) if len(wakeup_steps) > 0 else 0
 
         for step, score in zip(onset_steps, onset_scores):
             # select only wakeups than has at least one onset before
