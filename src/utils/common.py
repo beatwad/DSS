@@ -55,7 +55,7 @@ def random_crop(pos: int, duration: int, max_end) -> tuple[int, int]:
 
 
 def negative_sampling(this_event_df: pd.DataFrame, num_steps: int, 
-                      max_step: int, duration: int) -> int:
+                      max_step=None, duration=None) -> int:
     """negative sampling
 
     Args:

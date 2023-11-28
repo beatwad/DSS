@@ -13,10 +13,36 @@ def clean_weak_events(sub_df, event_threshold):
 
     # onset
     mask = (sub_df["event"] == "onset") & (sub_df["score"] >= 0.1)
-    sub_df.loc[mask, "prev_onset_step"] = sub_df.loc[mask, "step"]
-    sub_df.loc[mask, "next_onset_step"] = sub_df.loc[mask, "step"]
-    sub_df["prev_onset_step"] = sub_df["prev_onset_step"].ffill()
-    sub_df["next_onset_step"] = sub_df["next_onset_step"].bfill()
+    sub_df.loc[mask, "prev_high_score_onset_step"] = sub_df.loc[mask, "step"]
+    sub_df.loc[mask, "next_high_score_onset_step"] = sub_df.loc[mask, "step"]
+    sub_df["prev_high_score_onset_step"] = sub_df["prev_high_score_onset_step"].ffill()
+    sub_df["next_high_score_onset_step"] = sub_df["next_high_score_onset_step"].bfill()
+
+    mask = (
+        (sub_df["event"] == "onset")
+        & (sub_df["step"] - sub_df["prev_high_score_onset_step"] >= event_threshold)
+        & (sub_df["next_high_score_onset_step"] - sub_df["step"] >= event_threshold)
+    )
+    sub_df.loc[mask, "to_del"] = 1
+
+    # wakeup
+    mask = (sub_df["event"] == "wakeup") & (sub_df["score"] >= 0.1)
+    sub_df.loc[mask, "prev_high_score_wakeup_step"] = sub_df.loc[mask, "step"]
+    sub_df.loc[mask, "next_high_score_wakeup_step"] = sub_df.loc[mask, "step"]
+    sub_df["prev_high_score_wakeup_step"] = sub_df["prev_high_score_wakeup_step"].ffill()
+    sub_df["next_high_score_wakeup_step"] = sub_df["next_high_score_wakeup_step"].bfill()
+
+    mask = (
+        (sub_df["event"] == "wakeup")
+        & (sub_df["step"] - sub_df["prev_high_score_wakeup_step"] >= event_threshold)
+        & (sub_df["next_high_score_wakeup_step"] - sub_df["step"] >= event_threshold)
+    )
+    sub_df.loc[mask, "to_del"] = 1
+
+    # remove these events
+    sub_df = sub_df[sub_df["to_del"] == 0]
+
+    return sub_df
 
 
 def clean_too_far_events(sub_df, event_threshold):
@@ -34,7 +60,9 @@ def clean_too_far_events(sub_df, event_threshold):
     sub_df["prev_onset_step"] = sub_df["prev_onset_step"].ffill()
     sub_df["next_onset_step"] = sub_df["next_onset_step"].bfill()
 
-    mask = sub_df["step"] - sub_df["prev_onset_step"] >= event_threshold
+    mask = (sub_df["event"] == "wakeup") & (
+        sub_df["step"] - sub_df["prev_onset_step"] >= event_threshold
+    )
     sub_df.loc[mask, "to_del"] = 1
 
     # wakeup
@@ -44,12 +72,22 @@ def clean_too_far_events(sub_df, event_threshold):
     sub_df["prev_wakeup_step"] = sub_df["prev_wakeup_step"].ffill()
     sub_df["next_wakeup_step"] = sub_df["next_wakeup_step"].bfill()
 
-    mask = sub_df["next_wakeup_step"] - sub_df["step"] >= event_threshold
+    mask = (sub_df["event"] == "onset") & (
+        sub_df["next_wakeup_step"] - sub_df["step"] >= event_threshold
+    )
     sub_df.loc[mask, "to_del"] = 1
 
+    # remove these events
+    sub_df = sub_df[sub_df["to_del"] == 0]
+
+    return sub_df
+
+
+def delete_alone_events(sub_df, alone_threshold):
     # detect alone onset event that are between two other onset events and delete them
+    sub_df["to_del"] = 0
+    
     # onset
-    alone_threshold = 2880
     mask_1 = (
         sub_df["step"] - sub_df["prev_onset_step"].shift(1)
         < sub_df["step"] - sub_df["prev_wakeup_step"]
@@ -79,9 +117,17 @@ def clean_too_far_events(sub_df, event_threshold):
     mask_6 = sub_df["score"] < 0.1
     sub_df.loc[mask_1 & mask_2 & mask_3 & mask_4 & mask_5 & mask_6, "to_del"] = 1
 
+    # remove these events
+    sub_df = sub_df[sub_df["to_del"] == 0]
+
+    return sub_df
+
+    
+def delete_events_among_differnet_evnets(sub_df, close_threshold):
     # delete events that are among many different events
+    sub_df["to_del"] = 0
+    
     # onset
-    close_threshold = 360
     mask_1 = (
         (sub_df["event"].shift(1) == "wakeup")
         & (sub_df["event"].shift(2) == "wakeup")
@@ -160,7 +206,7 @@ def post_process_for_seg(
         wakeup_steps = find_peaks(wakeup_event_preds, height=score_th, distance=distance)[0]
         wakeup_scores = wakeup_event_preds[wakeup_steps]
         max_wakeup_step = np.max(wakeup_steps) if len(wakeup_steps) > 0 else 0
-        
+
         for step, score in zip(onset_steps, onset_scores):
             # select only wakeups than has at least one onset before
             # and not too close to series borders
@@ -204,9 +250,21 @@ def post_process_for_seg(
     sub_df = pd.DataFrame(records).sort_values(["series_id", "step"]).reset_index(drop=True)
     sub_df["row_id"] = np.arange(len(sub_df))
 
-    # 20 hours
-    # event_threshold = 14400
+    # delete onset and wakeup events that are too far from the same events with high score
+    high_score_event_threshold = 17280 * 1.01 # 24 hours
+    sub_df = clean_weak_events(sub_df, high_score_event_threshold)
+    
+    # # delete onset and wakeup events that are too far from next wakeup / previous onset event
+    # event_threshold = 14400 # 20 hours
     # sub_df = clean_too_far_events(sub_df, event_threshold)
+
+    # # detect alone onset event that are between two other onset events and delete them
+    # alone_threshold = 2880 # 2 hours
+    # sub_df = delete_alone_events(sub_df, alone_threshold)
+
+    # # # delete events that are among many different events
+    # close_threshold = 360 # 30 minutes
+    # sub_df = delete_events_among_differnet_evnets(sub_df, close_threshold)
 
     sub_df = sub_df[["row_id", "series_id", "step", "event", "score"]]
 
