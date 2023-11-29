@@ -163,9 +163,9 @@ def main(cfg: InferenceConfig):
                                             use_amp=cfg.use_amp)
             if keys is None:
                 keys = tmp_keys
-                preds = tmp_preds ** 4 # * weights[i]
+                preds = tmp_preds * tmp_preds # * weights[i]
             else:
-                preds += tmp_preds ** 4 # * weights[i]
+                preds += tmp_preds * tmp_preds # * weights[i]
 
     preds /= len(models)
     

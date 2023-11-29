@@ -46,9 +46,15 @@ class SegTrainDataset(Dataset):
         event_df: pl.DataFrame,
     ):
         self.cfg = cfg
-        self.event_df: pd.DataFrame = (
+        # only positive samples
+        self.event_df_pos: pd.DataFrame = (
             event_df.pivot(index=["series_id", "night"], columns="event", values="step")
             .drop_nulls()
+            .to_pandas()
+        )
+        # all samples
+        self.event_df: pd.DataFrame = (
+            event_df.pivot(index=["series_id", "night"], columns="event", values="step")
             .to_pandas()
         )
         self.features = features
@@ -66,22 +72,30 @@ class SegTrainDataset(Dataset):
 
     def __getitem__(self, idx):
         event = np.random.choice(["onset", "wakeup"], p=[0.5, 0.5])
-        pos = self.event_df.at[idx, event]
-        series_id = self.event_df.at[idx, "series_id"]
-        self.event_df["series_id"]
-        this_event_df = self.event_df.query("series_id == @series_id").reset_index(drop=True)
+        
+        positive = False if random.random() < self.cfg.dataset.bg_sampling_rate else True
+        if positive:
+            idx = idx % len(self.event_df_pos)
+            step = self.event_df_pos.at[idx, event]
+            series_id = self.event_df_pos.at[idx, "series_id"]
+            this_event_df = self.event_df_pos.query("series_id == @series_id").reset_index(drop=True)
+        else:
+            step = self.event_df.at[idx, event]
+            series_id = self.event_df.at[idx, "series_id"]
+            this_event_df = self.event_df.query("series_id == @series_id").reset_index(drop=True)
+        
         # extract data matching series_id
         this_feature = self.features[series_id]  # (n_steps, num_features)
         n_steps = this_feature.shape[0]
 
         # sample background
-        if random.random() < self.cfg.dataset.bg_sampling_rate:
+        if not positive:
             max_step = self.max_steps[series_id] if series_id in self.max_steps else 1e9
-            pos = negative_sampling(this_event_df, n_steps, max_step, self.cfg.duration)
+            step = negative_sampling(this_event_df, n_steps, max_step, self.cfg.duration)
 
         # crop
         if n_steps > self.cfg.duration:
-            start, end = random_crop(pos, self.cfg.duration, n_steps)
+            start, end = random_crop(step, self.cfg.duration, n_steps)
             feature = this_feature[start:end]
         else:
             start, end = 0, self.cfg.duration
