@@ -21,17 +21,17 @@ def get_detr_label(
     end: int,
     max_det: int = 20,
 ) -> np.ndarray:
-    # # (start, end)の範囲と(onset, wakeup)の範囲が重なるものを取得
+    # get the range where (start, end) and (onset, wakeup) overlap
     this_event_df = this_event_df.query("@start <= wakeup & onset <= @end")
 
     label = np.zeros((max_det, 3))  # (num_frames, [objectness, onset, wakeup])
-    # 1dbboxのラベルを作成
+    # create a label for 1dbbox
     for i, (onset, wakeup) in enumerate(this_event_df[["onset", "wakeup"]].to_numpy()):
-        onset = (onset - start) / duration  # 相対時間に変換
-        wakeup = (wakeup - start) / duration  # 相対時間に変換
+        onset = (onset - start) / duration  # convert to relative time
+        wakeup = (wakeup - start) / duration  # convert to relative time
         label[i] = np.array([1, onset, wakeup])
 
-    # 0 <= onset, wakeup <= 1になるようにclip
+    # 0 <= onset, wakeup <= 1 so that it becomes clip
     label[:, 1:] = np.clip(label[:, 1:], 0, 1)
 
     return label

@@ -84,7 +84,7 @@ class HungarianMatcher(nn.Module):
         tgt_class = tgt_class[tgt_obj_idx]  # (num_obj, 1)
         tgt_bbox = labels[:, :, 1:].flatten(0, 1)[tgt_obj_idx]  # (num_obj, 2)
 
-        # objectnessのコスト
+        # cost of objectness
         cost_class = -prob  # (batch_size * max_det, 1)
 
         # L1 loss
@@ -144,12 +144,12 @@ class DETRLoss(nn.Module):
             target_boxes.append(t)
         target_boxes_tensor = torch.cat(target_boxes, dim=0)
 
-        # GaussianNLLLossの入力はmuとvar
+        # GaussianNLLLoss inputs are mu and var
         mu = src_boxes[:, [1, 3]]
         var = src_boxes[:, [2, 4]]
         loss_bbox = self.reg_loss(mu, target_boxes_tensor[:, 1:], var)
 
-        # 損失をnum_objで割る
+        # divide loss by num_obj
         loss_bbox = loss_bbox.sum() / (target_boxes_tensor[:, 0].sum())
 
         return loss_bbox
@@ -200,7 +200,7 @@ class DETRHead(nn.Module):
         bbox: torch.Tensor = self.linear_bbox(x)
         bbox[:, :, [0, 2]] = bbox[:, :, [0, 2]].sigmoid()  # 0 <= onset, wakeup <= 1
 
-        # varを正の値にする
+        # var make positive
         bbox[:, :, [1, 3]] = bbox[:, :, [1, 3]].sigmoid()
 
         return torch.concat([logits, bbox], dim=-1)  # (batch_size, max_det, 5)
@@ -303,8 +303,8 @@ class DETR2DCNN(BaseModel):
         onset_label = onset_label.max(dim=1)[0]  # (batch_size, org_duration)
         wakeup_label = wakeup_label.max(dim=1)[0]  # (batch_size, org_duration)
 
-        # 0番目と最後の要素は0にする
-        # これは0以上org_duration以下にクリップしているので、0とorg_durationを除外するため
+        # set 0th and last element to 0
+        # clips from 0 to org_duration, so exclude 0 and org_duration
         onset_label[:, 0] = 0
         onset_label[:, -1] = 0
         wakeup_label[:, 0] = 0
