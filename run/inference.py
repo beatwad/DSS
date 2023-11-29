@@ -156,15 +156,16 @@ def main(cfg: InferenceConfig):
     # weights_ranks: [1, 2, 4, 3] # 6, 5
     # weights = [1.1, 0.8, 1.1, 1.1, 0.8, 1.1]
     
-    for i, model in enumerate(models):
+    # for i, model in enumerate(models):
+    for model in models:
         with trace("inference"):
             tmp_keys, tmp_preds = inference(cfg.duration, test_dataloader, model, device, 
                                             use_amp=cfg.use_amp)
             if keys is None:
                 keys = tmp_keys
-                preds = tmp_preds # * weights[i]
+                preds = tmp_preds * tmp_preds # * weights[i]
             else:
-                preds += tmp_preds # * weights[i]
+                preds += tmp_preds * tmp_preds # * weights[i]
 
     preds /= len(models)
     
