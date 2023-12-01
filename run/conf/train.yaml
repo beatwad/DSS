@@ -12,10 +12,10 @@ hydra:
 defaults:
   - _self_
   - dir: local
-  - dataset: seg
+  - dataset: seg # detr
   - model: Spec2DCNN
   - feature_extractor: CNNSpectrogram
-  - decoder: TransformerDecoder
+  - decoder: TransformerDecoder # DETR2DCNN
   - split: fold_0
 
 seed: 42
@@ -30,7 +30,7 @@ trainer:
   epoch: 50
   accelerator: auto
   use_amp: true
-  debug: false
+  debug: false # true
   gradient_clip_val: 1.0
   accumulate_grad_batches: 2
   monitor: val_loss

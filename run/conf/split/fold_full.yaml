@@ -283,7 +283,7 @@ train_series_ids:
   - "a2b0a64ec9cf"
   - "a3e59c2ce3f6"
   - "a4e48102f402"
-  
-  valid_series_ids:
+
+valid_series_ids:
   - "a596ad0b82aa"
   - "a681f9b04b21"

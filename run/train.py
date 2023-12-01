@@ -16,6 +16,9 @@ from src.modelmodule import PLSleepModel
 from src.models.common import get_model
 from src.utils.common import nearest_valid_size
 
+# from torch.utils.tensorboard import SummaryWriter
+# writer = SummaryWriter('tb_runs')
+
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s:%(name)s - %(message)s"
 )
