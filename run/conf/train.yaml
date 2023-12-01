@@ -14,7 +14,7 @@ defaults:
   - dir: local
   - dataset: seg # detr
   - model: Spec2DCNN
-  - feature_extractor: CNNSpectrogram
+  - feature_extractor: LSTMFeatureExtractor # CNNSpectrogram #  !!!
   - decoder: TransformerDecoder # DETR2DCNN
   - split: fold_0
 
@@ -23,7 +23,7 @@ exp_name: dummy
 duration: 8640 # duration is a multiple of 32, duration * 5 = number of seconds
 downsample_rate: 2
 upsample_rate: 1
-batch_size: 16
+batch_size: 8
 num_workers: 12
 
 trainer:
@@ -32,7 +32,7 @@ trainer:
   use_amp: true
   debug: false # true
   gradient_clip_val: 1.0
-  accumulate_grad_batches: 2
+  accumulate_grad_batches: 4
   monitor: val_loss
   monitor_mode: min
   check_val_every_n_epoch: 1
@@ -41,7 +41,7 @@ trainer:
 aug:
   mixup_prob: 0.0
   mixup_alpha: 0.4
-  cutmix_prob: 0.0
+  cutmix_prob: 0.5 # !!!
   cutmix_alpha: 0.4
   
 # post_process
