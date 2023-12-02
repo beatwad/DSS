@@ -251,21 +251,21 @@ def post_process_for_seg(
     sub_df = pd.DataFrame(records).sort_values(["series_id", "step"]).reset_index(drop=True)
     sub_df["row_id"] = np.arange(len(sub_df))
 
-    # # delete onset and wakeup events that are too far from the same events with high score
-    # high_score_event_threshold = 17280 * 1.01 # 24 hours
-    # sub_df = clean_weak_events(sub_df, high_score_event_threshold)
+    # delete onset and wakeup events that are too far from the same events with high score
+    high_score_event_threshold = 17280 * 1.01 # 24 hours
+    sub_df = clean_weak_events(sub_df, high_score_event_threshold)
     
-    # # delete onset and wakeup events that are too far from next wakeup / previous onset event
-    # event_threshold = 14400 # 20 hours
-    # sub_df = clean_too_far_events(sub_df, event_threshold)
+    # delete onset and wakeup events that are too far from next wakeup / previous onset event
+    event_threshold = 14400 # 20 hours
+    sub_df = clean_too_far_events(sub_df, event_threshold)
 
-    # # detect alone onset event that are between two other onset events and delete them
-    # alone_threshold = 2880 # 2 hours
-    # sub_df = delete_alone_events(sub_df, alone_threshold)
+    # detect alone onset event that are between two other onset events and delete them
+    alone_threshold = 2880 # 2 hours
+    sub_df = delete_alone_events(sub_df, alone_threshold)
 
-    # # delete events that are among many different events
-    # close_threshold = 360 # 30 minutes
-    # sub_df = delete_events_among_differnet_evnets(sub_df, close_threshold)
+    # delete events that are among many different events
+    close_threshold = 360 # 30 minutes
+    sub_df = delete_events_among_differnet_evnets(sub_df, close_threshold)
 
     sub_df = sub_df[["row_id", "series_id", "step", "event", "score"]]
 

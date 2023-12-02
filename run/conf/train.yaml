@@ -41,7 +41,7 @@ trainer:
 aug:
   mixup_prob: 0.0
   mixup_alpha: 0.4
-  cutmix_prob: 0.5 # !!!
+  cutmix_prob: 0 # !!!
   cutmix_alpha: 0.4
   
 # post_process
