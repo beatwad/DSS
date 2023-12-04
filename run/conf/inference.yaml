@@ -14,7 +14,7 @@ defaults:
   - dir: local
   - dataset: seg
   - model: Spec2DCNN
-  - feature_extractor: CNNSpectrogram # LSTMFeatureExtractor
+  - feature_extractor: LSTMFeatureExtractor # LSTMFeatureExtractor
   - decoder: TransformerDecoder
 
 exp_name: dummy
@@ -25,7 +25,7 @@ weight:
   run_name: single
 
 seed: 42
-duration: 8640 # duration is a number of samples (5 sec), total 8 hours
+duration: 17280 # duration is a number of samples (5 sec), total 8 hours
 downsample_rate: 2 # the value of duration divided by downsample_rate is num_frames
 upsample_rate: 1
 batch_size: 16
@@ -36,12 +36,12 @@ use_amp: true
 aug:
   mixup_prob: 0.0
   mixup_alpha: 0.4
-  cutmix_prob: 0.0 # 0.5 !!!
+  cutmix_prob: 0.5
   cutmix_alpha: 0.4
 
 # post_process
 pp:
-  score_th: 0.0015
+  score_th: 0.0001
   distance: 70
   offset: 8
 
