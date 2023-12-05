@@ -14,7 +14,7 @@ defaults:
   - dir: local
   - dataset: seg
   - model: Spec2DCNN
-  - feature_extractor: Spec2DCNN # LSTMFeatureExtractor
+  - feature_extractor: LSTMFeatureExtractor # LSTMFeatureExtractor
   - decoder: TransformerDecoder
 
 exp_name: dummy
@@ -36,7 +36,7 @@ use_amp: true
 aug:
   mixup_prob: 0.0
   mixup_alpha: 0.4
-  cutmix_prob: 0
+  cutmix_prob: 0.0
   cutmix_alpha: 0.4
 
 # post_process
