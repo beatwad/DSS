@@ -27,7 +27,7 @@ batch_size: 8
 num_workers: 12
 
 trainer:
-  epoch: 25
+  epoch: 50
   accelerator: auto
   use_amp: true
   debug: false # true
